@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kütüphane - Personel</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        .library-section {
+            flex: 1;
+            padding: 20px;
+            background-color: #f8f9fa;
+            position: relative;
+        }
+
+        .header-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .header-title h1 {
+            margin: 0;
+        }
+
+        .logout-btn {
+            text-decoration: none;
+            padding: 8px 15px;
+            background-color: #dc3545;
+            color: white;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: background-color 0.3s ease;
+        }
+        
+        .logout-btn:hover {
+            background-color: #c82333;
+        }
+
+        table { 
+            border-collapse: collapse; 
+            width: 100%; 
+            margin-bottom: 20px; 
+            table-layout: fixed;
+        }
+        
+        th, td { 
+            border: 1px solid black; 
+            padding: 8px; 
+            text-align: left;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        th:nth-child(1), td:nth-child(1) { width: 20%; }
+        th:nth-child(2), td:nth-child(2) { width: 20%; }
+        th:nth-child(3), td:nth-child(3) { width: 20%; }
+        th:nth-child(4), td:nth-child(4) { width: 20%; }
+        th:nth-child(5), td:nth-child(5) { width: 20%; }
+
+        .mesaj { 
+            color: green; 
+            margin: 10px 0; 
+        }
+        
+        .pagination {
+            display: flex;
+            justify-content: center;
+            list-style: none;
+            padding: 0;
+            margin: 20px 0;
+        }
+        
+        .pagination li {
+            margin: 0 5px;
+        }
+        
+        .pagination a {
+            text-decoration: none;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            color: #007bff;
+            border-radius: 4px;
+        }
+        
+        .pagination a:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .pagination .active {
+            background-color: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+        
+        .pagination .disabled {
+            color: #6c757d;
+            pointer-events: none;
+            background-color: #fff;
+            border-color: #ddd;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="library-section">
+            <div class="header-title">
+                <h1>Hoşgeldiniz, {{ session['ad_soyad'] }}</h1>
+                <a href="{{ url_for('cikis') }}" class="logout-btn">Çıkış Yap</a>
+            </div>
+
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    {% for message in messages %}
+                        <p class="mesaj">{{ message }}</p>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <h2>Mevcut Kitaplar</h2>
+            <table>
+                <tr>
+                    <th>Kitap Adı</th>
+                    <th>Yazar</th>
+                    <th>Sayfa Sayısı</th>
+                    <th>Kategori</th>
+                    <th>Stok</th>
+                    <th>İşlem</th>
+                </tr>
+                {% for kitap in kitaplar %}
+                <tr>
+                    <td>{{ kitap['kitap_adi'] }}</td>
+                    <td>{{ kitap['yazar'] }}</td>
+                    <td>{{ kitap['sayfa_sayisi'] }}</td>
+                    <td>{{ kitap['kategori'] }}</td>
+                    <td>{{ kitap['stok'] }}</td>
+                    <td>
+                        <form action="{{ url_for('kitap_odunc_ver') }}" method="POST">
+                            <input type="hidden" name="kitap_id" value="{{ kitap['id'] }}">
+                            <input type="text" name="kullanici_tc" placeholder="Kullanıcı TC" required>
+                            <button type="submit">Ödünç Ver</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+
+            {% if toplam_sayfa > 1 %}
+            <ul class="pagination">
+                <li>
+                    <a href="{{ url_for('kutuphane_personel', sayfa=sayfa-1) }}" 
+                       class="{{ 'disabled' if sayfa == 1 else '' }}">
+                        Önceki
+                    </a>
+                </li>
+                
+                {% for sayfa_num in range(1, toplam_sayfa + 1) %}
+                <li>
+                    <a href="{{ url_for('kutuphane_personel', sayfa=sayfa_num) }}"
+                       class="{{ 'active' if sayfa == sayfa_num else '' }}">
+                        {{ sayfa_num }}
+                    </a>
+                </li>
+                {% endfor %}
+                
+                <li>
+                    <a href="{{ url_for('kutuphane_personel', sayfa=sayfa+1) }}"
+                       class="{{ 'disabled' if sayfa == toplam_sayfa else '' }}">
+                        Sonraki
+                    </a>
+                </li>
+            </ul>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

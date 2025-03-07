@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kütüphane</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            overflow-x: hidden;
+            background-color: #e9ecef;
+            font-family: Arial, sans-serif;
+        }
+
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        .library-section {
+            flex: 1;
+            padding: 20px;
+            background-color: #dee2e6;
+            position: relative;
+        }
+
+        .header-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .header-title h1 {
+            margin: 0;
+            color: #343a40;
+        }
+
+        .button-container {
+            display: flex;
+            gap: 10px; /* Butonlar arasında boşluk */
+        }
+
+        .logout-btn {
+            text-decoration: none;
+            padding: 8px 15px;
+            background-color: #adb5bd;
+            color: white;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: background-color 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background-color: #868e96;
+        }
+
+        .profile-dropdown {
+            position: relative;
+        }
+
+        .profile-btn {
+            padding: 8px 15px;
+            background-color: #adb5bd;
+            color: white;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            border: none;
+        }
+
+        .profile-btn:hover {
+            background-color: #868e96;
+        }
+
+        .profile-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            background-color: #f8f9fa;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            padding: 10px;
+            border-radius: 5px;
+            width: 300px;
+        }
+
+        .profile-content.active {
+            display: block;
+        }
+
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.3); /* Arka planı koyulaştırır */
+            z-index: 999;
+        }
+
+        .overlay.active {
+            display: block;
+        }
+
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 20px 0;
+            padding: 10px;
+            background-color: #ced4da;
+            border-radius: 5px;
+        }
+
+        .welcome-text {
+            margin: 0;
+            font-size: 1.2em;
+            color: #495057;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-bottom: 20px;
+            table-layout: fixed;
+            background-color: #f8f9fa;
+        }
+
+        th, td {
+            border: 1px solid #adb5bd;
+            padding: 8px;
+            text-align: left;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            color: #495057;
+        }
+
+        th {
+            background-color: #ced4da;
+            padding: 5px;
+        }
+
+        th:nth-child(1), td:nth-child(1) { width: 40%; }
+        th:nth-child(2), td:nth-child(2) { width: 40%; }
+        th:nth-child(3), td:nth-child(3) { width: 20%; }
+
+        td:hover {
+            white-space: normal;
+            overflow: visible;
+            position: relative;
+            background-color: #e9ecef;
+            z-index: 1;
+        }
+
+        .mesaj {
+            color: #28a745;
+            margin: 10px 0;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            list-style: none;
+            padding: 0;
+            margin: 20px 0;
+        }
+
+        .pagination li {
+            margin: 0 5px;
+        }
+
+        .pagination a {
+            text-decoration: none;
+            padding: 8px 12px;
+            border: 1px solid #adb5bd;
+            color: #6c757d;
+            border-radius: 4px;
+            transition: background-color 0.3s ease;
+        }
+
+        .pagination a:hover {
+            background-color: #ced4da;
+        }
+
+        .pagination .active {
+            background-color: #6c757d;
+            color: white;
+            border-color: #6c757d;
+        }
+
+        .pagination .disabled {
+            color: #adb5bd;
+            pointer-events: none;
+            background-color: #f8f9fa;
+            border-color: #adb5bd;
+        }
+
+        .profile-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 20px 0;
+        }
+
+        .profile-photo {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    overflow: hidden; /* Taşan kısımları gizler */
+    cursor: pointer;
+    position: relative;
+    border: 2px solid #6c757d;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #6c757d; /* Beyaz alanları kapatmak için arka plan rengi (isteğe bağlı) */
+}
+
+.profile-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Fotoğrafı kırparak dairenin içini doldurur */
+    display: block; /* Boşlukları önlemek için */
+}
+
+        .profile-photo input[type="file"] {
+            display: none;
+        }
+
+        .photo-label {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            text-align: center;
+            padding: 5px 0;
+            font-size: 12px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .profile-photo:hover .photo-label {
+            opacity: 1;
+        }
+
+        .profile-section {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+
+        .profile-section h2 {
+            margin-top: 0;
+            color: #343a40;
+        }
+
+        .profile-section form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .profile-section label {
+            margin: 10px 0 5px;
+            color: #495057;
+        }
+
+        .profile-section input {
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #adb5bd;
+            border-radius: 4px;
+            background-color: #f8f9fa;
+        }
+
+        .profile-section button {
+            padding: 10px;
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background-color 0.3s ease;
+        }
+
+        .profile-section button:hover {
+            background-color: #495057;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="library-section" id="librarySection">
+            <div class="header-title">
+                <h1>Hoşgeldiniz, {{ session['ad_soyad'] }}</h1>
+                <div class="button-container">
+                    <button class="profile-btn" id="profileBtn">Profil</button>
+                    <a href="{{ url_for('cikis') }}" class="logout-btn">Çıkış Yap</a>
+                </div>
+            </div>
+
+            <div class="overlay" id="overlay"></div>
+            <div class="profile-dropdown">
+                <div class="profile-content" id="profileContent">
+                    <!-- Profil Fotoğrafı Alanı -->
+                    <div class="profile-container">
+                        <div class="profile-photo" onclick="document.getElementById('foto').click();">
+                            <form id="photoForm" action="{{ url_for('foto_degistir') }}" method="POST" enctype="multipart/form-data">
+                                <input type="file" id="foto" name="foto" accept="image/*" onchange="this.form.submit()">
+                                {% if foto %}
+                                    <img src="data:image/jpeg;base64,{{ foto }}" alt="Profil Fotoğrafı">
+                                {% else %}
+                                    <img src="data:image/jpeg;base64,/9j/..." alt="Varsayılan Fotoğraf">
+                                {% endif %}
+                            </form>
+                        </div>
+                    </div>
+
+                    
+                    <div class="profile-section">
+                        <h2>Şifre Değiştir</h2>
+                        <form action="{{ url_for('sifre_degistir') }}" method="POST">
+                            <label for="eski_sifre">Eski Şifre:</label>
+                            <input type="password" id="eski_sifre" name="eski_sifre" required>
+                            <label for="yeni_sifre">Yeni Şifre:</label>
+                            <input type="password" id="yeni_sifre" name="yeni_sifre" required>
+                            <label for="yeni_sifre_tekrar">Yeni Şifre Tekrar:</label>
+                            <input type="password" id="yeni_sifre_tekrar" name="yeni_sifre_tekrar" required>
+                            <button type="submit">Kaydet</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="header-container">
+                <h2 class="welcome-text">Hoşgeldiniz {{ session['ad_soyad'] }}</h2>
+            </div>
+
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    {% for message in messages %}
+                        <p class="mesaj">{{ message }}</p>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <h2>Ödünç Aldığınız Kitaplar</h2>
+            <table style="width: 100%; table-layout: fixed;">
+                <tr>
+                    <th style="width: 40%;">Kitap Adı</th>
+                    <th style="width: 40%;">Yazar</th>
+                    <th style="width: 20%;">Ödünç Alma Zamanı</th>
+                </tr>
+                {% if odunc_kitaplar %}
+                    {% for kitap in odunc_kitaplar %}
+                    <tr>
+                        <td>{{ kitap['kitap_adi'] }}</td>
+                        <td>{{ kitap['yazar'] }}</td>
+                        <td>{{ kitap['odunc_zamani'] }}</td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="3">Henüz ödünç aldığınız kitap yok.</td>
+                    </tr>
+                {% endif %}
+            </table>
+
+            <h2>Mevcut Kitaplar</h2>
+            <table style="width: 100%; table-layout: fixed;">
+                <tr>
+                    <th style="width: 20%;">Kitap Adı</th>
+                    <th style="width: 20%;">Yazar</th>
+                    <th style="width: 20%;">Sayfa Sayısı</th>
+                    <th style="width: 20%;">Kategori</th>
+                    <th style="width: 20%;">Stok</th>
+                </tr>
+                {% for kitap in kitaplar %}
+                <tr>
+                    <td>{{ kitap['kitap_adi'] }}</td>
+                    <td>{{ kitap['yazar'] }}</td>
+                    <td>{{ kitap['sayfa_sayisi'] }}</td>
+                    <td>{{ kitap['kategori'] }}</td>
+                    <td>{{ kitap['stok'] }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+
+            {% if toplam_sayfa > 1 %}
+            <ul class="pagination">
+                <li>
+                    <a href="{{ url_for('kutuphane_kullanici', sayfa=sayfa-1) }}" 
+                       class="{{ 'disabled' if sayfa == 1 else '' }}">
+                        Önceki
+                    </a>
+                </li>
+                
+                {% for sayfa_num in range(1, toplam_sayfa + 1) %}
+                <li>
+                    <a href="{{ url_for('kutuphane_kullanici', sayfa=sayfa_num) }}"
+                       class="{{ 'active' if sayfa == sayfa_num else '' }}">
+                        {{ sayfa_num }}
+                    </a>
+                </li>
+                {% endfor %}
+                
+                <li>
+                    <a href="{{ url_for('kutuphane_kullanici', sayfa=sayfa+1) }}"
+                       class="{{ 'disabled' if sayfa == toplam_sayfa else '' }}">
+                        Sonraki
+                    </a>
+                </li>
+            </ul>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        const profilePhoto = document.querySelector('.profile-photo');
+        const fileInput = document.getElementById('foto');
+    
+        profilePhoto.addEventListener('click', () => {
+            fileInput.click();
+        });
+    
+        // Mevcut profil açılır menü kodlarınız burada kalabilir
+        const profileBtn = document.getElementById('profileBtn');
+        const profileContent = document.getElementById('profileContent');
+        const overlay = document.getElementById('overlay');
+    
+        profileBtn.addEventListener('click', () => {
+            profileContent.classList.toggle('active');
+            overlay.classList.toggle('active');
+        });
+    
+        overlay.addEventListener('click', () => {
+            profileContent.classList.remove('active');
+            overlay.classList.remove('active');
+        });
+    
+        document.addEventListener('click', (e) => {
+            if (!profileContent.contains(e.target) && e.target !== profileBtn) {
+                profileContent.classList.remove('active');
+                overlay.classList.remove('active');
+            }
+        });
+    </script>
+</body>
+</html>

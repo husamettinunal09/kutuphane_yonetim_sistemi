@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kullanıcı Kayıt</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+        }
+        .button:hover {
+            background-color: #45a049;
+        }
+        .hata {
+            color: red;
+            margin-bottom: 10px;
+        }
+        .mesaj {
+            color: green;
+            margin-bottom: 10px;
+        }
+        .geri-don {
+            display: block;
+            text-align: center;
+            margin-top: 15px;
+            color: #666;
+            text-decoration: none;
+        }
+        .geri-don:hover {
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Kullanıcı Kayıt</h1>
+
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <p class="mesaj">{{ message }}</p>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST">
+            <div class="form-group">
+                <label>TC Kimlik No:</label>
+                <input type="text" name="tc" required maxlength="11" pattern="\d{11}" 
+                       title="TC Kimlik No 11 haneli olmalıdır">
+            </div>
+            <div class="form-group">
+                <label>Ad:</label>
+                <input type="text" name="ad" required>
+            </div>
+            <div class="form-group">
+                <label>Soyad:</label>
+                <input type="text" name="soyad" required>
+            </div>
+            <div class="form-group">
+                <label>Şifre:</label>
+                <input type="password" name="sifre" required>
+            </div>
+            <div class="form-group">
+                <label>Şifre Tekrar:</label>
+                <input type="password" name="sifre_tekrar" required>
+            </div>
+            <button type="submit" class="button">Kayıt Ol</button>
+        </form>
+        <a href="{{ url_for('kullanici_giris') }}" class="geri-don">Giriş Sayfasına Dön</a>
+    </div>
+
+    <script>
+        // TC Kimlik No'yu sadece rakam olarak sınırla
+        document.querySelector('input[name="tc"]').addEventListener('input', function(e) {
+            this.value = this.value.replace(/[^0-9]/g, '');
+        });
+
+        // Şifre eşleşme kontrolü
+        document.querySelector('form').addEventListener('submit', function(e) {
+            var sifre = document.querySelector('input[name="sifre"]').value;
+            var sifreTekrar = document.querySelector('input[name="sifre_tekrar"]').value;
+            
+            if (sifre !== sifreTekrar) {
+                e.preventDefault();
+                alert('Şifreler eşleşmiyor!');
+            }
+        });
+    </script>
+</body>
+</html>

@@ -200,7 +200,7 @@ def kutuphane_personel():
                          sayfa=sayfa,
                          toplam_sayfa=toplam_sayfa)
 
-@app.route('/kutuphane_kullanici', methods=['GET', 'POST'])
+@app.route('/kutuphane_kullanici', methods=['GET'])
 def kutuphane_kullanici():
     """Kitap yönetim sayfası ve kitap işlemleri."""
     if 'tc' not in session or session.get('rol') != 'kullanici':
@@ -210,23 +210,75 @@ def kutuphane_kullanici():
     conn = veritabani_baglantisi()
     cur = conn.cursor()
 
+    # Arama parametrelerini al
     sayfa = request.args.get('sayfa', 1, type=int)
+    kitap_adi = request.args.get('kitap_adi', '')
+    yazar = request.args.get('yazar', '')
+    min_sayfa = request.args.get('min_sayfa', type=int)
+    max_sayfa = request.args.get('max_sayfa', type=int)
+    kategori = request.args.get('kategori', '')
+
     sayfa_basi = 10
 
-    cur.execute('SELECT COUNT(*) as toplam FROM kitaplar')
-    toplam_kitap = cur.fetchone()['toplam']
-    toplam_sayfa = (toplam_kitap + sayfa_basi - 1) // sayfa_basi
-
-    offset = (sayfa - 1) * sayfa_basi
-    cur.execute(''' 
+    # Kitaplar için sorgu oluştur
+    query = ''' 
         SELECT k.id, k.kitap_adi, k.yazar, k.sayfa_sayisi, k.kategori, k.stok,
                (SELECT COUNT(*) FROM odunc 
                 WHERE kitap_id = k.id AND tc = ? AND durum = 'alindi') as alinmis 
-        FROM kitaplar k
-        LIMIT ? OFFSET ?
-    ''', (session['tc'], sayfa_basi, offset))
+        FROM kitaplar k 
+        WHERE 1=1
+    '''
+    params = [session['tc']]
+
+    if kitap_adi:
+        query += " AND k.kitap_adi LIKE ?"
+        params.append(f"%{kitap_adi}%")
+    if yazar:
+        query += " AND k.yazar LIKE ?"
+        params.append(f"%{yazar}%")
+    if min_sayfa is not None:
+        query += " AND k.sayfa_sayisi >= ?"
+        params.append(min_sayfa)
+    if max_sayfa is not None:
+        query += " AND k.sayfa_sayisi <= ?"
+        params.append(max_sayfa)
+    if kategori:
+        query += " AND k.kategori = ?"
+        params.append(kategori)
+
+    # Toplam kitap sayısını hesapla
+    toplam_query = "SELECT COUNT(*) as toplam FROM kitaplar k WHERE 1=1"
+    toplam_params = []
+    if kitap_adi:
+        toplam_query += " AND k.kitap_adi LIKE ?"
+        toplam_params.append(f"%{kitap_adi}%")
+    if yazar:
+        toplam_query += " AND k.yazar LIKE ?"
+        toplam_params.append(f"%{yazar}%")
+    if min_sayfa is not None:
+        toplam_query += " AND k.sayfa_sayisi >= ?"
+        toplam_params.append(min_sayfa)
+    if max_sayfa is not None:
+        toplam_query += " AND k.sayfa_sayisi <= ?"
+        toplam_params.append(max_sayfa)
+    if kategori:
+        toplam_query += " AND k.kategori = ?"
+        toplam_params.append(kategori)
+
+    cur.execute(toplam_query, toplam_params)
+    toplam_kitap = cur.fetchone()['toplam']
+    toplam_sayfa = (toplam_kitap + sayfa_basi - 1) // sayfa_basi
+
+    # Sayfalama için limit ve offset ekle
+    offset = (sayfa - 1) * sayfa_basi
+    query += " LIMIT ? OFFSET ?"
+    params.extend([sayfa_basi, offset])
+
+    # Kitapları çek
+    cur.execute(query, params)
     kitaplar = cur.fetchall()
 
+    # Ödünç alınan kitaplar
     cur.execute(''' 
         SELECT k.kitap_adi, k.yazar, o.odunc_zamani 
         FROM odunc o 
@@ -239,6 +291,10 @@ def kutuphane_kullanici():
     cur.execute('SELECT foto FROM kullanicilar WHERE tc = ?', (session['tc'],))
     foto = cur.fetchone()['foto']
 
+    # Kategorileri al
+    cur.execute("SELECT DISTINCT kategori FROM kitaplar WHERE kategori IS NOT NULL")
+    kategoriler = [row['kategori'] for row in cur.fetchall()]
+
     conn.close()
     
     return render_template('kutuphane_kullanici.html', 
@@ -246,7 +302,8 @@ def kutuphane_kullanici():
                            odunc_kitaplar=odunc_kitaplar,
                            sayfa=sayfa, 
                            toplam_sayfa=toplam_sayfa,
-                           foto=foto)
+                           foto=foto,
+                           kategoriler=kategoriler)
 
 @app.route('/kitap_odunc_ver', methods=['POST'])
 def kitap_odunc_ver():

@@ -337,7 +337,7 @@
                 <h1>Hoşgeldiniz, {{ session['ad_soyad'] }}</h1>
                 <div class="button-container">
                     <button class="profile-btn" id="profileBtn">Profil</button>
-                    <a href="{{ url_for('cikis') }}" class="logout-btn">Çıkış Yap</a>
+                    <a href="{{ url_for('kullanici_cikis') }}" class="logout-btn">Çıkış Yap</a>
                 </div>
             </div>
 
@@ -444,11 +444,11 @@
         </tr>
         {% for kitap in kitaplar %}
         <tr class="kitap-satiri">
-            <td>{{ kitap['kitap_adi'] }}</td>
-            <td>{{ kitap['yazar'] }}</td>
-            <td>{{ kitap['sayfa_sayisi'] }}</td>
-            <td>{{ kitap['kategori'] }}</td>
-            <td>{{ kitap['stok'] }}</td>
+            <td>{{ kitap[1] }}</td>
+            <td>{{ kitap[2] }}</td>
+            <td>{{ kitap[3] }}</td>
+            <td>{{ kitap[4] }}</td>
+            <td>{{ kitap[5] }}</td>
         </tr>
         {% endfor %}
     </table>

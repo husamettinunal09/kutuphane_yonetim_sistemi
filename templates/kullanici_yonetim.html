@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kullanıcı Yönetimi</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            overflow-x: hidden;
+            background-color: #e9ecef;
+            font-family: Arial, sans-serif;
+        }
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+        .library-section {
+            flex: 1;
+            padding: 20px;
+            background-color: #dee2e6;
+            position: relative;
+        }
+        .header-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .header-title h1 {
+            margin: 0;
+            color: #343a40;
+        }
+        .button-container {
+            display: flex;
+            gap: 10px;
+        }
+        .logout-btn, .profile-btn, .users-btn {
+            text-decoration: none;
+            padding: 8px 15px;
+            background-color: #adb5bd;
+            color: white;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: background-color 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+        .logout-btn:hover, .profile-btn:hover, .users-btn:hover {
+            background-color: #868e96;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-bottom: 20px;
+            background-color: #f8f9fa;
+        }
+        th, td {
+            border: 1px solid #adb5bd;
+            padding: 8px;
+            text-align: left;
+            color: #495057;
+        }
+        th {
+            background-color: #ced4da;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #495057;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #adb5bd;
+            border-radius: 4px;
+            background-color: #f8f9fa;
+        }
+        .submit-btn {
+            padding: 10px;
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .submit-btn:hover {
+            background-color: #495057;
+        }
+        .delete-btn {
+            padding: 6px 12px;
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .delete-btn:hover {
+            background-color: #b02a37;
+        }
+        .mesaj {
+            color: #28a745;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="library-section">
+            <div class="header-title">
+                <h1>Kullanıcı Yönetimi</h1>
+                <div class="button-container">
+                    <a href="{{ url_for('kutuphane_personel') }}" class="logout-btn">Geri Dön</a>
+                    <a href="{{ url_for('personel_cikis') }}" class="logout-btn">Çıkış Yap</a>
+                </div>
+            </div>
+
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    {% for message in messages %}
+                        <p class="mesaj">{{ message }}</p>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <!-- Kullanıcı Ekleme Formu -->
+            <div class="section">
+                <h2>Yeni Kullanıcı Ekle</h2>
+                <form action="{{ url_for('kullanici_yonetim') }}" method="POST">
+                    <div class="form-group">
+                        <label for="tc">TC Kimlik No:</label>
+                        <input type="text" id="tc" name="tc" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="sifre">Şifre:</label>
+                        <input type="password" id="sifre" name="sifre" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="ad">Ad:</label>
+                        <input type="text" id="ad" name="ad" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="soyad">Soyad:</label>
+                        <input type="text" id="soyad" name="soyad" required>
+                    </div>
+                    <button type="submit" class="submit-btn">Kullanıcı Ekle</button>
+                </form>
+            </div>
+
+            <!-- Kullanıcı Listesi -->
+            <div class="section">
+                <h2>Kullanıcı Listesi</h2>
+                <table>
+                    <tr>
+                        <th>TC Kimlik No</th>
+                        <th>Ad</th>
+                        <th>Soyad</th>
+                        <th>İşlemler</th>
+                    </tr>
+                    {% for kullanici in kullanicilar %}
+                    <tr>
+                        <td>{{ kullanici['tc'] }}</td>
+                        <td>{{ kullanici['ad'] }}</td>
+                        <td>{{ kullanici['soyad'] }}</td>
+                        <td>
+                            <form action="{{ url_for('kullanici_yonetim') }}" method="POST" style="display:inline;">
+                                <input type="hidden" name="sil_tc" value="{{ kullanici['tc'] }}">
+                                <button type="submit" class="delete-btn" onclick="return confirm('Bu kullanıcıyı silmek istediğinizden emin misiniz?');">Sil</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

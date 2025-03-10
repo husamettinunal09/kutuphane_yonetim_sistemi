@@ -83,11 +83,17 @@
         .overlay.active {
             display: block;
         }
+        .content-container {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
         .section {
             background-color: #f8f9fa;
             padding: 20px;
             border-radius: 5px;
-            margin: 20px 0;
+            flex: 1;
+            min-width: 300px;
         }
         table {
             border-collapse: collapse;
@@ -188,6 +194,27 @@
             color: #adb5bd;
             pointer-events: none;
         }
+        .button-container {
+    display: flex;
+    justify-content: flex-end; /* Butonları sağ tarafa hizalar */
+    gap: 10px; /* Butonlar arasında boşluk bırakır */
+}
+
+.button-container a, .button-container button {
+    padding: 10px 15px; /* Butonun içindeki boşluk */
+    background-color: #868e96; /* Buton rengi */
+    color: white; /* Yazı rengi */
+    border: none; /* Kenarlık yok */
+    border-radius: 5px; /* Kenar yuvarlama */
+    cursor: pointer; /* İmleç değişimi */
+    text-decoration: none; /* Alt çizgi yok */
+    font-size: 14px;
+    transition: background-color 0.3s ease;
+}
+
+.button-container a:hover, .button-container button:hover {
+    background-color: #0056b3; /* Hover rengi */
+}
     </style>
 </head>
 <body>
@@ -197,8 +224,9 @@
                 <h1>Hoşgeldiniz, {{ session['ad_soyad'] }}</h1>
                 <div class="button-container">
                     <button class="profile-btn" id="profileBtn">Profil</button>
-                    <a href="{{ url_for('kullanici_giris') }}" class="logout-btn">Çıkış Yap</a>
+                    <a href="{{ url_for('personel_cikis') }}" class="logout-btn">Çıkış Yap</a>
                     <a href="{{ url_for('kullanici_yonetim') }}" class="users-btn">Kullanıcılar</a>
+                     <a href="{{ url_for('islemler') }}" class="islemler-btn">İşlemler</a>
                 </div>
             </div>
 
@@ -209,7 +237,7 @@
                         <h2>Şifre Değiştir</h2>
                         <form action="{{ url_for('sifre_degistir') }}" method="POST">
                             <div class="form-group">
-                                <label for="eski_sifre">Eski Şifre:</label>
+                                <label for="eski_sifre"">Eski Şifre:</label>
                                 <input type="password" id="eski_sifre" name="eski_sifre" required>
                             </div>
                             <div class="form-group">
@@ -234,80 +262,86 @@
                 {% endif %}
             {% endwith %}
 
-            <!-- Kitap Ekleme/Güncelleme Alanı -->
-            <div class="section">
-                <h2>Kitap Ekle/Güncelle</h2>
-                <form action="{{ url_for('kitap_ekle_guncelle') }}" method="POST">
-                    <div class="form-group">
-                        <label for="kitap_id">Kitap ID (Güncelleme için):</label>
-                        <input type="number" id="kitap_id" name="kitap_id" placeholder="Boş bırakırsanız yeni kitap eklenir">
-                    </div>
-                    <div class="form-group">
-                        <label for="kitap_adi">Kitap Adı:</label>
-                        <input type="text" id="kitap_adi" name="kitap_adi" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="yazar">Yazar:</label>
-                        <input type="text" id="yazar" name="yazar" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="sayfa_sayisi">Sayfa Sayısı:</label>
-                        <input type="number" id="sayfa_sayisi" name="sayfa_sayisi" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="kategori">Kategori:</label>
-                        <input type="text" id="kategori" name="kategori" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="stok">Stok:</label>
-                        <input type="number" id="stok" name="stok" required>
-                    </div>
-                    <button type="submit" class="submit-btn">Kaydet</button>
-                </form>
-            </div>
+            <!-- Yan Yana İçerik -->
+            <div class="content-container">
+                <!-- Kitap Ekleme/Güncelleme Alanı -->
+                <div class="section">
+                    <h2>Kitap Ekle/Güncelle</h2>
+                    <p style="font-size: 12px; color: #495057;">Yeni kitap eklemek için tüm alanları doldurun. Stok güncellemesi için yalnızca Kitap ID ve Stok girin.</p>
+                    <form action="{{ url_for('kitap_ekle_guncelle') }}" method="POST">
+                        <div class="form-group">
+                            <label for="kitap_id">Kitap ID (Güncelleme için):</label>
+                            <input type="number" id="kitap_id" name="kitap_id" placeholder="Boş bırakırsanız yeni kitap eklenir">
+                        </div>
+                        <div class="form-group">
+                            <label for="kitap_adi">Kitap Adı:</label>
+                            <input type="text" id="kitap_adi" name="kitap_adi">
+                        </div>
+                        <div class="form-group">
+                            <label for="yazar">Yazar:</label>
+                            <input type="text" id="yazar" name="yazar">
+                        </div>
+                        <div class="form-group">
+                            <label for="sayfa_sayisi">Sayfa Sayısı:</label>
+                            <input type="number" id="sayfa_sayisi" name="sayfa_sayisi">
+                        </div>
+                        <div class="form-group">
+                            <label for="kategori">Kategori:</label>
+                            <input type="text" id="kategori" name="kategori">
+                        </div>
+                        <div class="form-group">
+                            <label for="stok">Stok:</label>
+                            <input type="number" id="stok" name="stok">
+                        </div>
+                        <button type="submit" class="submit-btn">Kaydet</button>
+                    </form>
+                </div>
 
-            <!-- Mevcut Kitaplar Tablosu -->
-            <div class="section">
-                <h2>Mevcut Kitaplar</h2>
-                <table>
-                    <tr>
-                        <th>Kitap Adı</th>
-                        <th>Yazar</th>
-                        <th>Sayfa Sayısı</th>
-                        <th>Kategori</th>
-                        <th>Stok</th>
-                        <th>İşlemler</th>
-                    </tr>
-                    {% for kitap in kitaplar %}
-                    <tr>
-                        <td>{{ kitap['kitap_adi'] }}</td>
-                        <td>{{ kitap['yazar'] }}</td>
-                        <td>{{ kitap['sayfa_sayisi'] }}</td>
-                        <td>{{ kitap['kategori'] }}</td>
-                        <td>{{ kitap['stok'] }}</td>
-                        <td>
-                            <form action="{{ url_for('kitap_guncelle_form') }}" method="POST" style="display:inline;">
-                                <input type="hidden" name="kitap_id" value="{{ kitap['id'] }}">
-                                <button type="submit" class="update-btn">Güncelle</button>
-                            </form>
-                            <form action="{{ url_for('kitap_sil') }}" method="POST" style="display:inline;" onsubmit="return confirm('Bu kitabı silmek istediğinizden emin misiniz?');">
-                                <input type="hidden" name="kitap_id" value="{{ kitap['id'] }}">
-                                <button type="submit" class="delete-btn">Sil</button>
-                            </form>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </table>
+                <!-- Mevcut Kitaplar Tablosu -->
+                <div class="section">
+                    <h2>Mevcut Kitaplar</h2>
+                    <table>
+                        <tr>
+                            <th style="width: 1%;">ID</th>
+                            <th>Kitap Adı</th>
+                            <th>Yazar</th>
+                            <th>Sayfa Sayısı</th>
+                            <th>Kategori</th>
+                            <th>Stok</th>
+                            <th>İşlemler</th>
+                        </tr>
+                        {% for kitap in kitaplar %}
+                        <tr>
+                            <td>{{ kitap['id'] }}</td>
+                            <td>{{ kitap['kitap_adi'] }}</td>
+                            <td>{{ kitap['yazar'] }}</td>
+                            <td>{{ kitap['sayfa_sayisi'] }}</td>
+                            <td>{{ kitap['kategori'] }}</td>
+                            <td>{{ kitap['stok'] }}</td>
+                            <td>
+                                <form action="{{ url_for('kitap_guncelle_form') }}" method="POST" style="display:inline;">
+                                    <input type="hidden" name="kitap_id" value="{{ kitap['id'] }}">
+                                    <button type="submit" class="update-btn">Güncelle</button>
+                                </form>
+                                <form action="{{ url_for('kitap_sil') }}" method="POST" style="display:inline;" onsubmit="return confirm('Bu kitabı silmek istediğinizden emin misiniz?');">
+                                    <input type="hidden" name="kitap_id" value="{{ kitap['id'] }}">
+                                    <button type="submit" class="delete-btn">Sil</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </table>
 
-                {% if toplam_sayfa > 1 %}
-                <ul class="pagination">
-                    <li><a href="{{ url_for('kutuphane_personel', sayfa=sayfa-1) }}" class="{{ 'disabled' if sayfa == 1 else '' }}">Önceki</a></li>
-                    {% for sayfa_num in range(1, toplam_sayfa + 1) %}
-                    <li><a href="{{ url_for('kutuphane_personel', sayfa=sayfa_num) }}" class="{{ 'active' if sayfa == sayfa_num else '' }}">{{ sayfa_num }}</a></li>
-                    {% endfor %}
-                    <li><a href="{{ url_for('kutuphane_personel', sayfa=sayfa+1) }}" class="{{ 'disabled' if sayfa == toplam_sayfa else '' }}">Sonraki</a></li>
-                </ul>
-                {% endif %}
+                    {% if toplam_sayfa > 1 %}
+                    <ul class="pagination">
+                        <li><a href="{{ url_for('kutuphane_personel', sayfa=sayfa-1) }}" class="{{ 'disabled' if sayfa == 1 else '' }}">Önceki</a></li>
+                        {% for sayfa_num in range(1, toplam_sayfa + 1) %}
+                        <li><a href="{{ url_for('kutuphane_personel', sayfa=sayfa_num) }}" class="{{ 'active' if sayfa == sayfa_num else '' }}">{{ sayfa_num }}</a></li>
+                        {% endfor %}
+                        <li><a href="{{ url_for('kutuphane_personel', sayfa=sayfa+1) }}" class="{{ 'disabled' if sayfa == toplam_sayfa else '' }}">Sonraki</a></li>
+                    </ul>
+                    {% endif %}
+                </div>
             </div>
         </div>
     </div>
@@ -337,4 +371,4 @@
         });
     </script>
 </body>
-</html>
+</html> 

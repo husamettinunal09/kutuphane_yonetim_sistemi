@@ -13,8 +13,8 @@ def create_db():
     # Kullanıcılar tablosu
     c.execute(''' 
         CREATE TABLE kullanicilar (
-            id INTEGER PRIMARY KEY,
-            tc TEXT UNIQUE NOT NULL,
+            id TEXT PRIMARY KEY,
+            tc TEXT  NOT NULL,
             sifre TEXT NOT NULL,
             ad TEXT NOT NULL,
             soyad TEXT NOT NULL,
@@ -49,16 +49,16 @@ def create_db():
 
     # Ödünç tablosu
     c.execute(''' 
-        CREATE TABLE odunc (
-            id INTEGER PRIMARY KEY,
-            tc TEXT NOT NULL,
-            kitap_id INTEGER NOT NULL,
-            durum TEXT NOT NULL DEFAULT 'alindi',
-            odunc_zamani TIMESTAMP,
-            iade_zamani TIMESTAMP,
-            FOREIGN KEY (kitap_id) REFERENCES kitaplar (id)
-        )
-    ''')
+    CREATE TABLE odunc (
+        id INTEGER PRIMARY KEY,
+        tc TEXT NOT NULL,
+        kitap_id INTEGER NOT NULL,
+        durum TEXT NOT NULL DEFAULT 'alindi',
+        odunc_zamani TIMESTAMP,
+        iade_zamani TIMESTAMP,
+        FOREIGN KEY (kitap_id) REFERENCES kitaplar (id)
+    )
+''')
 
     # Örnek kullanıcı ve personel ekleme
     c.execute("INSERT OR IGNORE INTO kullanicilar (tc, sifre, ad, soyad, foto) VALUES (?, ?, ?, ?, ?)", 
@@ -107,6 +107,45 @@ def create_db():
     conn.commit()
     conn.close()
     print("Veritabanı başarıyla oluşturuldu!")
+
+def kitaplari_getir(kitap_adi=None, yazar=None, min_sayfa=None, max_sayfa=None, kategori=None):
+    conn = sqlite3.connect('kutuphane.db')
+    c = conn.cursor()
+
+    # Temel sorgu
+    sorgu = "SELECT * FROM kitaplar WHERE 1=1"
+    parametreler = []
+
+    # Kitap adı filtresi
+    if kitap_adi:
+        sorgu += " AND kitap_adi LIKE ?"
+        parametreler.append(f"%{kitap_adi}%")
+
+    # Yazar filtresi
+    if yazar:
+        sorgu += " AND yazar LIKE ?"
+        parametreler.append(f"%{yazar}%")
+
+    # Sayfa sayısı filtresi
+    if min_sayfa:
+        sorgu += " AND sayfa_sayisi >= ?"
+        parametreler.append(min_sayfa)
+    if max_sayfa:
+        sorgu += " AND sayfa_sayisi <= ?"
+        parametreler.append(max_sayfa)
+
+    # Kategori filtresi
+    if kategori:
+        sorgu += " AND kategori = ?"
+        parametreler.append(kategori)
+
+    # Sorguyu çalıştır
+    c.execute(sorgu, parametreler)
+    kitaplar = c.fetchall()
+
+    conn.close()
+    return kitaplar
+
 
 if __name__ == '__main__':
     create_db()

@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>İşlemler</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            text-align: center;
+            padding: 50px;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            display: inline-block;
+            width: 400px;
+        }
+        input, button {
+            padding: 10px;
+            margin: 10px;
+            width: 200px;
+        }
+        button {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        .user-info {
+            margin-top: 20px;
+            font-size: 18px;
+            color: #333;
+        }
+        .search-section {
+            margin-top: 20px;
+        }
+        .search-section input {
+            width: 300px;
+        }
+        .book-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        .book-table th, .book-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        .book-table th {
+            background-color: #ced4da;
+        }
+        .book-table tr:hover {
+            background-color: #f1f1f1;
+            cursor: pointer;
+        }
+        .borrow-button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .borrow-button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>TC Kimlik No ile Giriş Yap</h2>
+        <form method="POST" action="{{ url_for('islemler') }}">
+            <input type="text" name="tc" placeholder="TC Kimlik No" required>
+            <button type="submit">Giriş Yap</button>
+        </form>
+
+        {% if kullanici %}
+        <div class="user-info">
+            <p><strong>Kullanıcı:</strong> {{ kullanici['ad_soyad'] }}</p>
+        </div>
+
+        <div class="search-section">
+            <input type="text" id="bookSearch" placeholder="Kitap Adı Ara" onkeyup="searchBooks()">
+            <table class="book-table" id="bookTable">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Kitap Adı</th>
+                        <th>Stok</th>
+                        <th>İşlem</th>
+                    </tr>
+                </thead>
+                <tbody id="bookList"></tbody>
+            </table>
+        </div>
+        {% endif %}
+    </div>
+
+    <script>
+        let userTc = "{{ kullanici['tc'] if kullanici else '' }}";
+
+        function searchBooks() {
+            const query = document.getElementById('bookSearch').value.toLowerCase();
+            fetch('/search_books', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ query: query })
+            })
+            .then(response => response.json())
+            .then(data => {
+                const bookList = document.getElementById('bookList');
+                bookList.innerHTML = '';
+                data.forEach(book => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${book.id}</td>
+                        <td>${book.kitap_adi}</td>
+                        <td>${book.stok}</td>
+                        <td><button class="borrow-button" onclick="borrowBook(${book.id})">Ödünç Al</button></td>
+                    `;
+                    bookList.appendChild(row);
+                });
+            });
+        }
+
+        function borrowBook(bookId) {
+            const returnDate = prompt('İade tarihini girin (YYYY-MM-DD):');
+            if (returnDate) {
+                fetch('/kitap_odunc_al', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ kitap_id: bookId, kullanici_tc: userTc, iade_zamani: returnDate })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.message);
+                    searchBooks(); // Refresh the book list
+                });
+            }
+        }
+    </script>
+</body>
+</html>

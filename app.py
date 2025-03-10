@@ -285,32 +285,67 @@ def kitap_ekle_guncelle():
         return redirect(url_for('personel_giris'))
     
     kitap_id = request.form.get('kitap_id')
-    kitap_adi = request.form['kitap_adi']
-    yazar = request.form['yazar']
-    sayfa_sayisi = request.form['sayfa_sayisi']
-    kategori = request.form['kategori']
-    stok = request.form['stok']
+    kitap_adi = request.form.get('kitap_adi', '').strip()
+    yazar = request.form.get('yazar', '').strip()
+    sayfa_sayisi = request.form.get('sayfa_sayisi')
+    kategori = request.form.get('kategori', '').strip()
+    stok = request.form.get('stok')
     
     conn = veritabani_baglantisi()
     cur = conn.cursor()
     
-    if kitap_id:
-        # Kitap güncelleme
-        cur.execute(''' 
-            UPDATE kitaplar 
-            SET kitap_adi = ?, yazar = ?, sayfa_sayisi = ?, kategori = ?, stok = ?
-            WHERE id = ?
-        ''', (kitap_adi, yazar, sayfa_sayisi, kategori, stok, kitap_id))
+    if kitap_id:  # Güncelleme işlemi
+        cur.execute('SELECT * FROM kitaplar WHERE id = ?', (kitap_id,))
+        kitap = cur.fetchone()
+        if not kitap:
+            flash('Bu ID ile bir kitap bulunamadı!')
+            conn.close()
+            return redirect(url_for('kutuphane_personel'))
+
+        update_query = 'UPDATE kitaplar SET '
+        params = []
+        updates = []
+
+        if kitap_adi:
+            updates.append('kitap_adi = ?')
+            params.append(kitap_adi)
+        if yazar:
+            updates.append('yazar = ?')
+            params.append(yazar)
+        if sayfa_sayisi:
+            updates.append('sayfa_sayisi = ?')
+            params.append(sayfa_sayisi)
+        if kategori:
+            updates.append('kategori = ?')
+            params.append(kategori)
+        if stok:
+            updates.append('stok = ?')
+            params.append(stok)
+
+        if not updates:
+            flash('Güncellemek için en az bir alan doldurun!')
+            conn.close()
+            return redirect(url_for('kutuphane_personel'))
+
+        update_query += ', '.join(updates) + ' WHERE id = ?'
+        params.append(kitap_id)
+
+        cur.execute(update_query, params)
+        conn.commit()
         flash('Kitap başarıyla güncellendi!')
-    else:
-        # Yeni kitap ekleme
+    else:  # Yeni kitap ekleme
+        if not (kitap_adi and yazar and sayfa_sayisi and kategori and stok):
+            flash('Yeni kitap eklemek için tüm alanları doldurun!')
+            conn.close()
+            return redirect(url_for('kutuphane_personel'))
+
         cur.execute(''' 
             INSERT INTO kitaplar (kitap_adi, yazar, sayfa_sayisi, kategori, stok)
             VALUES (?, ?, ?, ?, ?)
         ''', (kitap_adi, yazar, sayfa_sayisi, kategori, stok))
+        conn.commit()
         flash('Kitap başarıyla eklendi!')
     
-    conn.commit()
     conn.close()
     return redirect(url_for('kutuphane_personel'))
 
@@ -328,14 +363,12 @@ def kitap_guncelle_form():
     kitap = cur.fetchone()
     conn.close()
     
-    # Kitap bilgilerini forma otomatik doldurmak için burada bir çözüm uygulayabiliriz
-    # Ancak bu örnekte basitlik adına doğrudan mevcut formu kullanıyoruz
     flash('Kitap ID alanına ID\'yi girerek güncelleyin.')
     return redirect(url_for('kutuphane_personel'))
 
 @app.route('/kitap_sil', methods=['POST'])
 def kitap_sil():
-    """Kitap silme işlemi."""
+    """Kitap silme işlemi ve ID'lerin yeniden numaralandırılması."""
     if 'tc' not in session or session.get('rol') != 'personel':
         return redirect(url_for('personel_giris'))
     
@@ -344,16 +377,53 @@ def kitap_sil():
     conn = veritabani_baglantisi()
     cur = conn.cursor()
     
-    # Kitabın ödünç alınıp alınmadığını kontrol et
     cur.execute('SELECT COUNT(*) FROM odunc WHERE kitap_id = ? AND durum = ?', (kitap_id, 'alindi'))
     odunc_sayisi = cur.fetchone()[0]
     
     if odunc_sayisi > 0:
         flash('Bu kitap şu anda ödünç alınmış, silinemez!')
-    else:
+        conn.close()
+        return redirect(url_for('kutuphane_personel'))
+    
+    try:
         cur.execute('DELETE FROM kitaplar WHERE id = ?', (kitap_id,))
+        
+        cur.execute(''' 
+            CREATE TABLE temp_kitaplar AS 
+            SELECT * FROM kitaplar ORDER BY id
+        ''')
+        
+        cur.execute('DELETE FROM kitaplar')
+        
+        cur.execute('SELECT * FROM temp_kitaplar')
+        kalan_kitaplar = cur.fetchall()
+        for i, kitap in enumerate(kalan_kitaplar, start=1):
+            cur.execute(''' 
+                INSERT INTO kitaplar (id, kitap_adi, yazar, sayfa_sayisi, kategori, stok)
+                VALUES (?, ?, ?, ?, ?, ?)
+            ''', (i, kitap['kitap_adi'], kitap['yazar'], kitap['sayfa_sayisi'], kitap['kategori'], kitap['stok']))
+        
+        cur.execute('DROP TABLE temp_kitaplar')
+        
+        cur.execute(''' 
+            UPDATE odunc 
+            SET kitap_id = (
+                SELECT ROW_NUMBER() OVER (ORDER BY k.id) 
+                FROM kitaplar k 
+                WHERE k.kitap_adi = (
+                    SELECT kitap_adi 
+                    FROM kitaplar 
+                    WHERE id = odunc.kitap_id
+                ) LIMIT 1
+            )
+            WHERE kitap_id > ?
+        ''', (kitap_id,))
+        
         conn.commit()
-        flash('Kitap başarıyla silindi!')
+        flash('Kitap başarıyla silindi ve ID\'ler yeniden düzenlendi!')
+    except Exception as e:
+        conn.rollback()
+        flash(f'Hata oluştu: {str(e)}')
     
     conn.close()
     return redirect(url_for('kutuphane_personel'))
@@ -393,69 +463,51 @@ def kitap_odunc_ver():
 def kitap_iade_et():
     """Kitap iade etme işlemi."""
     if 'tc' not in session or session.get('rol') != 'personel':
+        flash('Bu işlemi gerçekleştirmek için personel olarak giriş yapmalısınız!')
         return redirect(url_for('personel_giris'))
     
-    kitap_id = request.form['kitap_id']
-    tc = request.form['tc']
+    kitap_id = request.form.get('kitap_id')
+    kullanici_tc = request.form.get('tc')
+    
+    if not kitap_id or not kullanici_tc:
+        flash('Kitap ID ve TC kimlik numarası gereklidir!')
+        return redirect(request.referrer or url_for('kullanici_yonetim'))
     
     conn = veritabani_baglantisi()
     cur = conn.cursor()
     
-    cur.execute(''' 
-        UPDATE odunc 
-        SET durum = 'iade', iade_zamani = CURRENT_TIMESTAMP 
-        WHERE kitap_id = ? AND tc = ? AND durum = 'alindi'
-    ''', (kitap_id, tc))
-    cur.execute('UPDATE kitaplar SET stok = stok + 1 WHERE id = ?', (kitap_id,))
-    conn.commit()
-    
-    flash('Kitap başarıyla iade edildi!')
-    conn.close()
-    return redirect(url_for('kullanici_yonetim'))
-
-@app.route('/kullanici_yonetim', methods=['GET', 'POST'])
-def kullanici_yonetim():
-    """Kullanıcı yönetimi sayfası."""
-    if 'tc' not in session or session.get('rol') != 'personel':
-        return redirect(url_for('personel_giris'))
-
-    conn = veritabani_baglantisi()
-    cur = conn.cursor()
-
-    odunc_kitaplar = None
-    tc = None
-    mevcut_kitaplar = None
-
-    if request.method == 'POST':
-        tc = request.form['tc']
-        sifre = request.form['sifre']
-        
-        cur.execute('SELECT * FROM kullanicilar WHERE tc = ? AND sifre = ?', (tc, sifre))
-        kullanici = cur.fetchone()
-        
-        if not kullanici:
-            flash('Geçersiz TC veya şifre!')
-            conn.close()
-            return render_template('kullanici_yonetim.html', odunc_kitaplar=None)
-
-        # Ödünç alınan kitaplar
+    try:
         cur.execute(''' 
-            SELECT k.kitap_adi, k.yazar, o.odunc_zamani, o.iade_zamani, o.kitap_id
-            FROM odunc o 
-            JOIN kitaplar k ON o.kitap_id = k.id 
-            WHERE o.tc = ? AND o.durum = 'alindi'
-        ''', (tc,))
-        odunc_kitaplar = cur.fetchall()
-
-        # Mevcut kitaplar (stok > 0 olanlar)
-        cur.execute('SELECT id, kitap_adi, yazar, stok FROM kitaplar WHERE stok > 0')
-        mevcut_kitaplar = cur.fetchall()
-
-    conn.close()
-    return render_template('kullanici_yonetim.html', 
-                         odunc_kitaplar=odunc_kitaplar, 
-                         tc=tc,
-                         mevcut_kitaplar=mevcut_kitaplar)
+            SELECT COUNT(*) 
+            FROM odunc 
+            WHERE kitap_id = ? AND tc = ? AND durum = 'alindi'
+        ''', (kitap_id, kullanici_tc))
+        odunc_var_mi = cur.fetchone()[0]
+        
+        if odunc_var_mi == 0:
+            flash('Bu kitap bu kullanıcı tarafından ödünç alınmamış!')
+            conn.close()
+            return redirect(request.referrer or url_for('kullanici_yonetim'))
+        
+        cur.execute(''' 
+            UPDATE odunc 
+            SET durum = 'iade', iade_zamani = CURRENT_TIMESTAMP 
+            WHERE kitap_id = ? AND tc = ? AND durum = 'alindi'
+        ''', (kitap_id, kullanici_tc))
+        
+        cur.execute('UPDATE kitaplar SET stok = stok + 1 WHERE id = ?', (kitap_id,))
+        
+        conn.commit()
+        flash('Kitap başarıyla iade edildi!')
+    
+    except Exception as e:
+        conn.rollback()
+        flash(f'İade işlemi sırasında hata oluştu: {str(e)}')
+    
+    finally:
+        conn.close()
+    
+    return redirect(request.referrer or url_for('kullanici_yonetim'))
 
 @app.route('/profil')
 def profil():
@@ -528,11 +580,147 @@ def foto_degistir():
     flash('Geçersiz dosya formatı! Yalnızca PNG, JPG, JPEG, GIF kabul edilir.')
     return redirect(url_for('kutuphane_kullanici' if session['rol'] == 'kullanici' else 'kutuphane_personel'))
 
-@app.route('/cikis')
-def cikis():
-    """Oturum kapatma işlemi."""
+@app.route('/kullanici_yonetim', methods=['GET', 'POST'])
+def kullanici_yonetim():
+    if 'tc' not in session or session.get('rol') != 'personel':
+        return redirect(url_for('personel_giris'))
+
+    conn = veritabani_baglantisi()
+    cur = conn.cursor()
+
+    odunc_kitaplar = None
+    tc = None
+    mevcut_kitaplar = None
+
+    if request.method == 'POST':
+        if 'tc' in request.form and 'sifre' in request.form and 'ad' in request.form and 'soyad' in request.form:
+            tc = request.form['tc']
+            sifre = request.form['sifre']
+            ad = request.form['ad']
+            soyad = request.form['soyad']
+            try:
+                cur.execute("INSERT INTO kullanicilar (tc, sifre, ad, soyad) VALUES (?, ?, ?, ?)", (tc, sifre, ad, soyad))
+                conn.commit()
+                flash('Kullanıcı başarıyla eklendi!')
+            except sqlite3.IntegrityError:
+                flash('Bu TC kimlik numarası zaten kayıtlı!')
+
+        elif 'sil_tc' in request.form:
+            tc = request.form['sil_tc']
+            try:
+                cur.execute('DELETE FROM kullanicilar WHERE tc = ?', (tc,))
+                conn.commit()
+                flash('Kullanıcı başarıyla silindi!')
+            except Exception as e:
+                flash(f'Hata: {str(e)}')
+
+        elif 'tc' in request.form and 'sifre' in request.form:
+            tc = request.form['tc']
+            sifre = request.form['sifre']
+            cur.execute('SELECT * FROM kullanicilar WHERE tc = ? AND sifre = ?', (tc, sifre))
+            kullanici = cur.fetchone()
+            if not kullanici:
+                flash('Geçersiz TC veya şifre!')
+            else:
+                cur.execute(''' 
+                    SELECT k.kitap_adi, k.yazar, o.odunc_zamani, o.iade_zamani, o.kitap_id
+                    FROM odunc o 
+                    JOIN kitaplar k ON o.kitap_id = k.id 
+                    WHERE o.tc = ? AND o.durum = 'alindi'
+                ''', (tc,))
+                odunc_kitaplar = cur.fetchall()
+                cur.execute('SELECT id, kitap_adi, yazar, stok FROM kitaplar WHERE stok > 0')
+                mevcut_kitaplar = cur.fetchall()
+
+    cur.execute('SELECT tc, ad, soyad FROM kullanicilar')
+    kullanicilar = cur.fetchall()
+
+    conn.close()
+    return render_template('kullanici_yonetim.html', 
+                         odunc_kitaplar=odunc_kitaplar, 
+                         tc=tc,
+                         mevcut_kitaplar=mevcut_kitaplar,
+                         kullanicilar=kullanicilar)
+
+@app.route('/search_books', methods=['POST'])
+def search_books():
+    data = request.get_json()
+    query = data.get('query', '').lower()
+
+    conn = veritabani_baglantisi()
+    cur = conn.cursor()
+
+    # Kitapları büyük-küçük harf duyarlılığı olmadan arama
+    cur.execute('''
+        SELECT id, kitap_adi, stok 
+        FROM kitaplar 
+        WHERE LOWER(kitap_adi) LIKE ? 
+        ORDER BY kitap_adi
+    ''', (f'%{query}%',))
+
+    kitaplar = cur.fetchall()
+    conn.close()
+
+    # Kitapları JSON formatında döndür
+    kitaplar_list = [dict(kitap) for kitap in kitaplar]
+    return jsonify(kitaplar_list)
+
+@app.route('/islemler', methods=['GET', 'POST'])
+def islemler():
+    if request.method == 'POST':
+        tc = request.form['tc']
+        conn = veritabani_baglantisi()
+        cur = conn.cursor()
+        cur.execute('SELECT ad, soyad FROM kullanicilar WHERE tc = ?', (tc,))
+        kullanici = cur.fetchone()
+        conn.close()
+        if kullanici:
+            kullanici_dict = dict(kullanici)  # SQLite Row nesnesini sözlüğe çevir
+            kullanici_dict['ad_soyad'] = f"{kullanici['ad']} {kullanici['soyad']}"
+            return render_template('islemler.html', kullanici=kullanici_dict)
+        else:
+            flash('Kullanıcı bulunamadı!', 'error')
+    return render_template('islemler.html')
+
+@app.route('/kitap_odunc_al', methods=['POST'])
+def kitap_odunc_al():
+    if 'tc' not in session or session.get('rol') != 'personel':
+        return redirect(url_for('personel_giris'))
+    
+    kitap_id = request.form['kitap_id']
+    kullanici_tc = request.form['kullanici_tc']
+    
+    conn = veritabani_baglantisi()
+    cur = conn.cursor()
+    
+    cur.execute('SELECT stok FROM kitaplar WHERE id = ?', (kitap_id,))
+    stok = cur.fetchone()['stok']
+    
+    if stok > 0:
+        cur.execute(''' 
+            INSERT INTO odunc (tc, kitap_id, durum) 
+            VALUES (?, ?, 'alindi')
+        ''', (kullanici_tc, kitap_id))
+        cur.execute('UPDATE kitaplar SET stok = stok - 1 WHERE id = ?', (kitap_id,))
+        conn.commit()
+        flash('Kitap başarıyla ödünç verildi!')
+    else:
+        flash('Bu kitap stokta yok!')
+    
+    conn.close()
+    return redirect(url_for('islemler'))
+
+@app.route('/kullanici_cikis')
+def kullanici_cikis():
+    """Kullanıcılar için oturum kapatma işlemi."""
     session.clear()
     return redirect(url_for('kullanici_giris'))
+
+@app.route('/personel_cikis')
+def personel_cikis():
+    """Personeller için oturum kapatma işlemi."""
+    session.clear()
+    return redirect(url_for('personel_giris'))
 
 if __name__ == '__main__':
     os.makedirs(UPLOAD_FOLDER, exist_ok=True)

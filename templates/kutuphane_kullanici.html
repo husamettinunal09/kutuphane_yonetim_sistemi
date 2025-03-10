@@ -341,6 +341,7 @@
                 </div>
             </div>
 
+             
             <div class="overlay" id="overlay"></div>
             <div class="profile-dropdown">
                 <div class="profile-content" id="profileContent">
@@ -408,7 +409,7 @@
                 {% endif %}
             </table>
 
-            <h2>Mevcut Kitaplar</h2>
+<h2>Mevcut Kitaplar</h2>
 <form id="aramaFormu" action="{{ url_for('kutuphane_kullanici') }}" method="GET">
     <table id="kitaplarTablosu" style="width: 100%; table-layout: fixed;">
         <tr>
@@ -484,19 +485,108 @@
     </div>
 
     <script>
-        // Profil fotoğrafı değiştirme
+
+document.getElementById('aramaFormu').addEventListener('submit', function(event) {
+    event.preventDefault(); // Sayfa yenilemeyi önle
+    const query = new URLSearchParams(new FormData(this)).toString();
+    window.location.href = "/kutuphane_kullanici?" + query; // Backend'den tüm veriyi getir
+});
+
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Tüm filtreleme elemanlarını al
+        const kitapAdiArama = document.getElementById('kitapAdiArama');
+        const yazarAdiArama = document.getElementById('yazarAdiArama');
+        const minSayfa = document.getElementById('minSayfa');
+        const maxSayfa = document.getElementById('maxSayfa');
+        const kategoriArama = document.getElementById('kategoriArama');
+        const aramaFormu = document.getElementById('aramaFormu');
+        const kitapSatirlari = document.querySelectorAll('.kitap-satiri');
+        const profileBtn = document.getElementById('profileBtn');
+        const profileContent = document.getElementById('profileContent');
+        const overlay = document.getElementById('overlay');
         const profilePhoto = document.querySelector('.profile-photo');
         const fileInput = document.getElementById('foto');
-    
+
+        // Tüm filtreleme girdilerine olay dinleyicileri ekle
+        kitapAdiArama.addEventListener('input', filtreUygula);
+        yazarAdiArama.addEventListener('input', filtreUygula);
+        minSayfa.addEventListener('input', filtreUygula);
+        maxSayfa.addEventListener('input', filtreUygula);
+        kategoriArama.addEventListener('change', filtreUygula);
+
+        // Form gönderimi olayı ekle
+        aramaFormu.addEventListener('submit', function(event) {
+            // Eğer tüm filtreler boşsa, gereksiz sayfa yenilemeyi önlemek için varsayılan gönderimi engelle
+            if (kitapAdiArama.value === '' && 
+                yazarAdiArama.value === '' && 
+                minSayfa.value === '' && 
+                maxSayfa.value === '' && 
+                kategoriArama.value === '') {
+                event.preventDefault();
+            }
+        });
+
+        // Minimum sayfa sayısının maksimum sayfa sayısından büyük olmamasını sağla
+        minSayfa.addEventListener('change', function() {
+            if (maxSayfa.value !== '' && parseInt(minSayfa.value) > parseInt(maxSayfa.value)) {
+                maxSayfa.value = minSayfa.value;
+            }
+        });
+        
+        maxSayfa.addEventListener('change', function() {
+            if (minSayfa.value !== '' && parseInt(maxSayfa.value) < parseInt(minSayfa.value)) {
+                minSayfa.value = maxSayfa.value;
+            }
+        });
+
+        // Ana filtreleme fonksiyonu
+        function filtreUygula() {
+            const kitapAdi = kitapAdiArama.value.toLowerCase();
+            const yazarAdi = yazarAdiArama.value.toLowerCase();
+            const min = minSayfa.value !== '' ? parseInt(minSayfa.value) : 0;
+            const max = maxSayfa.value !== '' ? parseInt(maxSayfa.value) : Infinity;
+            const kategori = kategoriArama.value;
+            
+            kitapSatirlari.forEach(satir => {
+                const kitapAdiHucre = satir.children[0].textContent.toLowerCase();
+                const yazarAdiHucre = satir.children[1].textContent.toLowerCase();
+                const sayfaSayisi = parseInt(satir.children[2].textContent);
+                const kategoriHucre = satir.children[3].textContent;
+                
+                const kitapAdiUygun = kitapAdiHucre.includes(kitapAdi);
+                const yazarAdiUygun = yazarAdiHucre.includes(yazarAdi);
+                const sayfaSayisiUygun = sayfaSayisi >= min && sayfaSayisi <= max;
+                const kategoriUygun = kategori === '' || kategoriHucre === kategori;
+                
+                if (kitapAdiUygun && yazarAdiUygun && sayfaSayisiUygun && kategoriUygun) {
+                    satir.style.display = '';
+                } else {
+                    satir.style.display = 'none';
+                }
+            });
+        }
+
+        // Tüm filtreleri temizleme fonksiyonu
+        function filtreTemizle() {
+            kitapAdiArama.value = '';
+            yazarAdiArama.value = '';
+            minSayfa.value = '';
+            maxSayfa.value = '';
+            kategoriArama.value = '';
+            
+            // Tüm satırları görünür yap
+            kitapSatirlari.forEach(satir => {
+                satir.style.display = '';
+            });
+        }
+
+        // Profil fotoğrafı değiştirme
         profilePhoto.addEventListener('click', () => {
             fileInput.click();
         });
     
         // Profil açılır menü
-        const profileBtn = document.getElementById('profileBtn');
-        const profileContent = document.getElementById('profileContent');
-        const overlay = document.getElementById('overlay');
-    
         profileBtn.addEventListener('click', () => {
             profileContent.classList.toggle('active');
             overlay.classList.toggle('active');
@@ -513,86 +603,7 @@
                 overlay.classList.remove('active');
             }
         });
-
-        document.addEventListener('DOMContentLoaded', function() {
-    const kitapAdiArama = document.getElementById('kitapAdiArama');
-    const yazarAdiArama = document.getElementById('yazarAdiArama');
-    const minSayfa = document.getElementById('minSayfa');
-    const maxSayfa = document.getElementById('maxSayfa');
-    const kategoriArama = document.getElementById('kategoriArama');
-    const kitapSatirlari = document.querySelectorAll('.kitap-satiri');
-    const temizleBtn = document.getElementById('temizleBtn');
-    const aramaFormu = document.getElementById('aramaFormu');
-    
-    // Kategori seçeneklerini doldurma
-    const kategoriler = new Set();
-    kitapSatirlari.forEach(satir => {
-        const kategori = satir.children[3].textContent;
-        if (kategori) kategoriler.add(kategori);
     });
-    
-    kategoriler.forEach(kategori => {
-        const option = document.createElement('option');
-        option.value = kategori;
-        option.textContent = kategori;
-        kategoriArama.appendChild(option);
-    });
-    
-
-    araBtn.addEventListener('click', filtreUygula);
-    temizleBtn.addEventListener('click', filtreTemizle);
-    temizleBtn.addEventListener('click', function() {
-        // Formdaki tüm input'ları temizle
-        aramaFormu.reset();
-        // Formu manuel olarak göndererek temizlenmiş haliyle sonuçları al
-        aramaFormu.submit();
-    });
-
-    // Filtreleme fonksiyonu
-    function filtreUygula() {
-        const kitapAdi = kitapAdiArama.value.toLowerCase();
-        const yazarAdi = yazarAdiArama.value.toLowerCase();
-        const min = minSayfa.value !== '' ? parseInt(minSayfa.value) : 0;
-        const max = maxSayfa.value !== '' ? parseInt(maxSayfa.value) : Infinity;
-        const kategori = kategoriArama.value;
-        
-        kitapSatirlari.forEach(satir => {
-            const kitapAdiHucre = satir.children[0].textContent.toLowerCase();
-            const yazarAdiHucre = satir.children[1].textContent.toLowerCase();
-            const sayfaSayisi = parseInt(satir.children[2].textContent);
-            const kategoriHucre = satir.children[3].textContent;
-            
-            const kitapAdiUygun = kitapAdiHucre.includes(kitapAdi);
-            const yazarAdiUygun = yazarAdiHucre.includes(yazarAdi);
-            const sayfaSayisiUygun = sayfaSayisi >= min && sayfaSayisi <= max;
-            const kategoriUygun = kategori === '' || kategoriHucre === kategori;
-            
-            if (kitapAdiUygun && yazarAdiUygun && sayfaSayisiUygun && kategoriUygun) {
-                satir.style.display = '';
-            } else {
-                satir.style.display = 'none';
-            }
-        });
-    }
-    
-    function filtreTemizle() {
-        kitapAdiArama.value = '';
-        yazarAdiArama.value = '';
-        minSayfa.value = '';
-        maxSayfa.value = '';
-        kategoriArama.value = '';
-        kitapSatirlari.forEach(satir => {
-            satir.style.display = '';
-        });
-    }
-    // Olay dinleyicileri
-    kitapAdiArama.addEventListener('input', filtreUygula);
-    yazarAdiArama.addEventListener('input', filtreUygula);
-    minSayfa.addEventListener('input', filtreUygula);
-    maxSayfa.addEventListener('input', filtreUygula);
-    kategoriArama.addEventListener('change', filtreUygula);
-    
-});
-    </script>
+</script>
 </body>
 </html>

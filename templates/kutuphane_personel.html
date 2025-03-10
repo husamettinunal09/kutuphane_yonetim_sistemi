@@ -3,81 +3,162 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kütüphane - Personel</title>
+    <title>Personel Kütüphane Paneli</title>
     <style>
         body {
             margin: 0;
             padding: 0;
             min-height: 100vh;
             overflow-x: hidden;
+            background-color: #e9ecef;
+            font-family: Arial, sans-serif;
         }
-
         .app-container {
             display: flex;
             min-height: 100vh;
             overflow-x: hidden;
             position: relative;
         }
-
         .library-section {
             flex: 1;
             padding: 20px;
-            background-color: #f8f9fa;
+            background-color: #dee2e6;
             position: relative;
         }
-
         .header-title {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 20px;
         }
-
         .header-title h1 {
             margin: 0;
+            color: #343a40;
         }
-
-        .logout-btn {
+        .button-container {
+            display: flex;
+            gap: 10px;
+        }
+        .logout-btn, .profile-btn, .users-btn {
             text-decoration: none;
             padding: 8px 15px;
-            background-color: #dc3545;
+            background-color: #adb5bd;
             color: white;
             border-radius: 4px;
             font-size: 14px;
             transition: background-color 0.3s ease;
+            border: none;
+            cursor: pointer;
         }
-        
-        .logout-btn:hover {
-            background-color: #c82333;
+        .logout-btn:hover, .profile-btn:hover, .users-btn:hover {
+            background-color: #868e96;
         }
-
-        table { 
-            border-collapse: collapse; 
-            width: 100%; 
-            margin-bottom: 20px; 
-            table-layout: fixed;
+        .profile-dropdown {
+            position: relative;
         }
-        
-        th, td { 
-            border: 1px solid black; 
-            padding: 8px; 
+        .profile-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            background-color: #f8f9fa;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            padding: 10px;
+            border-radius: 5px;
+            width: 300px;
+        }
+        .profile-content.active {
+            display: block;
+        }
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            z-index: 999;
+        }
+        .overlay.active {
+            display: block;
+        }
+        .section {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-bottom: 20px;
+            background-color: #f8f9fa;
+        }
+        th, td {
+            border: 1px solid #adb5bd;
+            padding: 8px;
             text-align: left;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
+            color: #495057;
         }
-
-        th:nth-child(1), td:nth-child(1) { width: 20%; }
-        th:nth-child(2), td:nth-child(2) { width: 20%; }
-        th:nth-child(3), td:nth-child(3) { width: 20%; }
-        th:nth-child(4), td:nth-child(4) { width: 20%; }
-        th:nth-child(5), td:nth-child(5) { width: 20%; }
-
-        .mesaj { 
-            color: green; 
-            margin: 10px 0; 
+        th {
+            background-color: #ced4da;
         }
-        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #495057;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #adb5bd;
+            border-radius: 4px;
+            background-color: #f8f9fa;
+        }
+        .submit-btn {
+            padding: 10px;
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .submit-btn:hover {
+            background-color: #495057;
+        }
+        .update-btn {
+            padding: 6px 12px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .update-btn:hover {
+            background-color: #0056b3;
+        }
+        .delete-btn {
+            padding: 6px 12px;
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .delete-btn:hover {
+            background-color: #b02a37;
+        }
+        .mesaj {
+            color: #28a745;
+            margin: 10px 0;
+        }
         .pagination {
             display: flex;
             justify-content: center;
@@ -85,34 +166,27 @@
             padding: 0;
             margin: 20px 0;
         }
-        
         .pagination li {
             margin: 0 5px;
         }
-        
         .pagination a {
             text-decoration: none;
             padding: 8px 12px;
-            border: 1px solid #ddd;
-            color: #007bff;
-            border-radius: 4px;
-        }
-        
-        .pagination a:hover {
-            background-color: #f8f9fa;
-        }
-        
-        .pagination .active {
-            background-color: #007bff;
-            color: white;
-            border-color: #007bff;
-        }
-        
-        .pagination .disabled {
+            border: 1px solid #adb5bd;
             color: #6c757d;
+            border-radius: 4px;
+            transition: background-color 0.3s ease;
+        }
+        .pagination a:hover {
+            background-color: #ced4da;
+        }
+        .pagination .active {
+            background-color: #6c757d;
+            color: white;
+        }
+        .pagination .disabled {
+            color: #adb5bd;
             pointer-events: none;
-            background-color: #fff;
-            border-color: #ddd;
         }
     </style>
 </head>
@@ -121,7 +195,35 @@
         <div class="library-section">
             <div class="header-title">
                 <h1>Hoşgeldiniz, {{ session['ad_soyad'] }}</h1>
-                <a href="{{ url_for('cikis') }}" class="logout-btn">Çıkış Yap</a>
+                <div class="button-container">
+                    <button class="profile-btn" id="profileBtn">Profil</button>
+                    <a href="{{ url_for('kullanici_giris') }}" class="logout-btn">Çıkış Yap</a>
+                    <a href="{{ url_for('kullanici_yonetim') }}" class="users-btn">Kullanıcılar</a>
+                </div>
+            </div>
+
+            <div class="overlay" id="overlay"></div>
+            <div class="profile-dropdown">
+                <div class="profile-content" id="profileContent">
+                    <div class="section">
+                        <h2>Şifre Değiştir</h2>
+                        <form action="{{ url_for('sifre_degistir') }}" method="POST">
+                            <div class="form-group">
+                                <label for="eski_sifre">Eski Şifre:</label>
+                                <input type="password" id="eski_sifre" name="eski_sifre" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="yeni_sifre">Yeni Şifre:</label>
+                                <input type="password" id="yeni_sifre" name="yeni_sifre" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="yeni_sifre_tekrar">Yeni Şifre Tekrar:</label>
+                                <input type="password" id="yeni_sifre_tekrar" name="yeni_sifre_tekrar" required>
+                            </div>
+                            <button type="submit" class="submit-btn">Kaydet</button>
+                        </form>
+                    </div>
+                </div>
             </div>
 
             {% with messages = get_flashed_messages() %}
@@ -132,61 +234,107 @@
                 {% endif %}
             {% endwith %}
 
-            <h2>Mevcut Kitaplar</h2>
-            <table>
-                <tr>
-                    <th>Kitap Adı</th>
-                    <th>Yazar</th>
-                    <th>Sayfa Sayısı</th>
-                    <th>Kategori</th>
-                    <th>Stok</th>
-                    <th>İşlem</th>
-                </tr>
-                {% for kitap in kitaplar %}
-                <tr>
-                    <td>{{ kitap['kitap_adi'] }}</td>
-                    <td>{{ kitap['yazar'] }}</td>
-                    <td>{{ kitap['sayfa_sayisi'] }}</td>
-                    <td>{{ kitap['kategori'] }}</td>
-                    <td>{{ kitap['stok'] }}</td>
-                    <td>
-                        <form action="{{ url_for('kitap_odunc_ver') }}" method="POST">
-                            <input type="hidden" name="kitap_id" value="{{ kitap['id'] }}">
-                            <input type="text" name="kullanici_tc" placeholder="Kullanıcı TC" required>
-                            <button type="submit">Ödünç Ver</button>
-                        </form>
-                    </td>
-                </tr>
-                {% endfor %}
-            </table>
+            <!-- Kitap Ekleme/Güncelleme Alanı -->
+            <div class="section">
+                <h2>Kitap Ekle/Güncelle</h2>
+                <form action="{{ url_for('kitap_ekle_guncelle') }}" method="POST">
+                    <div class="form-group">
+                        <label for="kitap_id">Kitap ID (Güncelleme için):</label>
+                        <input type="number" id="kitap_id" name="kitap_id" placeholder="Boş bırakırsanız yeni kitap eklenir">
+                    </div>
+                    <div class="form-group">
+                        <label for="kitap_adi">Kitap Adı:</label>
+                        <input type="text" id="kitap_adi" name="kitap_adi" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="yazar">Yazar:</label>
+                        <input type="text" id="yazar" name="yazar" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="sayfa_sayisi">Sayfa Sayısı:</label>
+                        <input type="number" id="sayfa_sayisi" name="sayfa_sayisi" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="kategori">Kategori:</label>
+                        <input type="text" id="kategori" name="kategori" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="stok">Stok:</label>
+                        <input type="number" id="stok" name="stok" required>
+                    </div>
+                    <button type="submit" class="submit-btn">Kaydet</button>
+                </form>
+            </div>
 
-            {% if toplam_sayfa > 1 %}
-            <ul class="pagination">
-                <li>
-                    <a href="{{ url_for('kutuphane_personel', sayfa=sayfa-1) }}" 
-                       class="{{ 'disabled' if sayfa == 1 else '' }}">
-                        Önceki
-                    </a>
-                </li>
-                
-                {% for sayfa_num in range(1, toplam_sayfa + 1) %}
-                <li>
-                    <a href="{{ url_for('kutuphane_personel', sayfa=sayfa_num) }}"
-                       class="{{ 'active' if sayfa == sayfa_num else '' }}">
-                        {{ sayfa_num }}
-                    </a>
-                </li>
-                {% endfor %}
-                
-                <li>
-                    <a href="{{ url_for('kutuphane_personel', sayfa=sayfa+1) }}"
-                       class="{{ 'disabled' if sayfa == toplam_sayfa else '' }}">
-                        Sonraki
-                    </a>
-                </li>
-            </ul>
-            {% endif %}
+            <!-- Mevcut Kitaplar Tablosu -->
+            <div class="section">
+                <h2>Mevcut Kitaplar</h2>
+                <table>
+                    <tr>
+                        <th>Kitap Adı</th>
+                        <th>Yazar</th>
+                        <th>Sayfa Sayısı</th>
+                        <th>Kategori</th>
+                        <th>Stok</th>
+                        <th>İşlemler</th>
+                    </tr>
+                    {% for kitap in kitaplar %}
+                    <tr>
+                        <td>{{ kitap['kitap_adi'] }}</td>
+                        <td>{{ kitap['yazar'] }}</td>
+                        <td>{{ kitap['sayfa_sayisi'] }}</td>
+                        <td>{{ kitap['kategori'] }}</td>
+                        <td>{{ kitap['stok'] }}</td>
+                        <td>
+                            <form action="{{ url_for('kitap_guncelle_form') }}" method="POST" style="display:inline;">
+                                <input type="hidden" name="kitap_id" value="{{ kitap['id'] }}">
+                                <button type="submit" class="update-btn">Güncelle</button>
+                            </form>
+                            <form action="{{ url_for('kitap_sil') }}" method="POST" style="display:inline;" onsubmit="return confirm('Bu kitabı silmek istediğinizden emin misiniz?');">
+                                <input type="hidden" name="kitap_id" value="{{ kitap['id'] }}">
+                                <button type="submit" class="delete-btn">Sil</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </table>
+
+                {% if toplam_sayfa > 1 %}
+                <ul class="pagination">
+                    <li><a href="{{ url_for('kutuphane_personel', sayfa=sayfa-1) }}" class="{{ 'disabled' if sayfa == 1 else '' }}">Önceki</a></li>
+                    {% for sayfa_num in range(1, toplam_sayfa + 1) %}
+                    <li><a href="{{ url_for('kutuphane_personel', sayfa=sayfa_num) }}" class="{{ 'active' if sayfa == sayfa_num else '' }}">{{ sayfa_num }}</a></li>
+                    {% endfor %}
+                    <li><a href="{{ url_for('kutuphane_personel', sayfa=sayfa+1) }}" class="{{ 'disabled' if sayfa == toplam_sayfa else '' }}">Sonraki</a></li>
+                </ul>
+                {% endif %}
+            </div>
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const profileBtn = document.getElementById('profileBtn');
+            const profileContent = document.getElementById('profileContent');
+            const overlay = document.getElementById('overlay');
+
+            profileBtn.addEventListener('click', () => {
+                profileContent.classList.toggle('active');
+                overlay.classList.toggle('active');
+            });
+
+            overlay.addEventListener('click', () => {
+                profileContent.classList.remove('active');
+                overlay.classList.remove('active');
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!profileContent.contains(e.target) && e.target !== profileBtn) {
+                    profileContent.classList.remove('active');
+                    overlay.classList.remove('active');
+                }
+            });
+        });
+    </script>
 </body>
 </html>

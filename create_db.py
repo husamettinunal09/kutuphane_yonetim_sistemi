@@ -35,17 +35,16 @@ def create_db():
         )
     ''')
 
-    # Kitaplar tablosu
     c.execute(''' 
-        CREATE TABLE kitaplar (
-            id INTEGER PRIMARY KEY,
-            kitap_adi TEXT NOT NULL,
-            yazar TEXT NOT NULL,
-            sayfa_sayisi INTEGER NOT NULL,
-            kategori TEXT NOT NULL,
-            stok INTEGER NOT NULL DEFAULT 1
-        )
-    ''')
+    CREATE TABLE kitaplar (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        kitap_adi TEXT NOT NULL,
+        yazar TEXT NOT NULL,
+        sayfa_sayisi INTEGER NOT NULL,
+        kategori TEXT NOT NULL,
+        stok INTEGER NOT NULL DEFAULT 1
+    )
+''')
 
     # Ödünç tablosu
     c.execute(''' 

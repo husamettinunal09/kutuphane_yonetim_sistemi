@@ -278,7 +278,8 @@ def kutuphane_kullanici():
                            foto=foto,
                            kategoriler=kategoriler)
 
-@app.route('/kitap_ekle_guncelle', methods=['POST'])
+
+@app.route('/_guncelle', methods=['POST'])
 def kitap_ekle_guncelle():
     """Kitap ekleme ve güncelleme işlemleri."""
     if 'tc' not in session or session.get('rol') != 'personel':
@@ -290,7 +291,7 @@ def kitap_ekle_guncelle():
     sayfa_sayisi = request.form.get('sayfa_sayisi')
     kategori = request.form.get('kategori', '').strip()
     stok = request.form.get('stok')
-    
+
     conn = veritabani_baglantisi()
     cur = conn.cursor()
     
@@ -339,15 +340,44 @@ def kitap_ekle_guncelle():
             conn.close()
             return redirect(url_for('kutuphane_personel'))
 
-        cur.execute(''' 
-            INSERT INTO kitaplar (kitap_adi, yazar, sayfa_sayisi, kategori, stok)
-            VALUES (?, ?, ?, ?, ?)
-        ''', (kitap_adi, yazar, sayfa_sayisi, kategori, stok))
-        conn.commit()
-        flash('Kitap başarıyla eklendi!')
-    
+        try:
+            # 1. Geçici bir tablo oluştur
+            cur.execute('''
+                CREATE TEMP TABLE temp_kitaplar AS
+                SELECT * FROM kitaplar ORDER BY id ASC
+            ''')
+
+            # 2. Kitapları sil
+            cur.execute('DELETE FROM kitaplar')
+
+            # 3. ID'leri kaydırarak kitapları geri ekle
+            cur.execute('SELECT * FROM temp_kitaplar')
+            kitaplar = cur.fetchall()
+            for kitap in kitaplar:
+                cur.execute('''
+                    INSERT INTO kitaplar (id, kitap_adi, yazar, sayfa_sayisi, kategori, stok)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                ''', (kitap['id'] + 1, kitap['kitap_adi'], kitap['yazar'], kitap['sayfa_sayisi'], kitap['kategori'], kitap['stok']))
+
+            # 4. Yeni kitabı ID = 1 olarak ekle
+            cur.execute('''
+                INSERT INTO kitaplar (id, kitap_adi, yazar, sayfa_sayisi, kategori, stok)
+                VALUES (1, ?, ?, ?, ?, ?)
+            ''', (kitap_adi, yazar, sayfa_sayisi, kategori, stok))
+
+            # 5. Geçici tabloyu sil
+            cur.execute('DROP TABLE temp_kitaplar')
+
+            conn.commit()
+            flash('Kitap başarıyla eklendi ve önceki kitaplar kaydırıldı!')
+
+        except Exception as e:
+            conn.rollback()
+            flash(f'Hata oluştu: {str(e)}')
+
     conn.close()
     return redirect(url_for('kutuphane_personel'))
+
 
 @app.route('/kitap_guncelle_form', methods=['POST'])
 def kitap_guncelle_form():
@@ -709,6 +739,209 @@ def kitap_odunc_al():
     
     conn.close()
     return redirect(url_for('islemler'))
+
+@app.route('/kitap_arama', methods=['GET', 'POST'])
+def kitap_arama_yap():
+    """Kitap arama sayfası ve arama işlemleri."""
+    kitaplar = []
+    if request.method == 'POST':
+        kitap_adi = request.form['kitap_adi']
+        
+        conn = veritabani_baglantisi()
+        cur = conn.cursor()
+        
+        cur.execute('SELECT * FROM kitaplar WHERE kitap_adi LIKE ?', (f'%{kitap_adi}%',))
+        kitaplar = cur.fetchall()
+        
+        conn.close()
+    
+    return render_template('kitap_arama.html', kitaplar=kitaplar)
+
+@app.route('/kitap_odunc_alv2', methods=['POST'])
+def kitap_odunc_alv2():
+    """Kitap ödünç alma işlemi."""
+    if 'tc' not in session or session.get('rol') != 'kullanici':
+        return redirect(url_for('kullanici_giris'))
+    
+    kitap_id = request.form['kitap_id']
+    kullanici_tc = session['tc']  # Oturumdan TC'yi al
+
+    conn = veritabani_baglantisi()
+    cur = conn.cursor()
+    
+    cur.execute('SELECT stok FROM kitaplar WHERE id = ?', (kitap_id,))
+    stok = cur.fetchone()['stok']
+    
+    if stok > 0:
+        cur.execute(''' 
+            INSERT INTO odunc (tc, kitap_id, durum) 
+            VALUES (?, ?, 'alindi')
+        ''', (kullanici_tc, kitap_id))
+        cur.execute('UPDATE kitaplar SET stok = stok - 1 WHERE id = ?', (kitap_id,))
+        conn.commit()
+        flash('Kitap başarıyla ödünç verildi!')
+    else:
+        flash('Bu kitap stokta yok!')
+    
+    conn.close()
+    return redirect(url_for('kitap_arama_yap'))    
+
+@app.route('/', methods=['GET', 'POST'])
+def kullanici_girisv2():
+    """Kullanıcı giriş sayfası ve giriş işlemleri."""
+    if request.method == 'POST':
+        tc: str = request.form.get('tc')
+        sifre: str = request.form.get('sifre')
+        rol: str = request.form.get('rol')
+        
+        if not tc or not sifre or not rol:
+            flash('Lütfen tüm alanları doldurun!')
+            return render_template('kullanici_giris.html')
+
+        conn = veritabani_baglantisi()
+        cur = conn.cursor()
+        
+        try:
+            if rol == 'personel':
+                cur.execute('SELECT * FROM personel WHERE tc = ? AND sifre = ?', (tc, sifre))
+                kullanici = cur.fetchone()
+                if kullanici:
+                    session['tc'] = tc
+                    session['rol'] = 'personel'
+                    session['ad_soyad'] = f"{kullanici['ad']} {kullanici['soyad']}"
+                    return redirect(url_for('kutuphane_personel'))
+                flash('Geçersiz yönetici bilgileri!')
+            elif rol == 'kullanici':
+                cur.execute('SELECT * FROM kullanicilar WHERE tc = ? AND sifre = ?', (tc, sifre))
+                kullanici = cur.fetchone()
+                if kullanici:
+                    session['tc'] = tc
+                    session['rol'] = 'kullanici'
+                    session['ad_soyad'] = f"{kullanici['ad']} {kullanici['soyad']}"  # TC'ye göre ad soyadı al
+                    return redirect(url_for('kutuphane_kullanici'))
+                flash('Geçersiz kullanıcı bilgileri!')
+        except Exception as e:
+            flash(f'Hata: {str(e)}')
+        finally:
+            conn.close()
+    
+    return render_template('kullanici_giris.html')
+
+
+from flask import jsonify
+
+# Route to fetch user by TC
+@app.route('/fetch_user_by_tc', methods=['POST'])
+def fetch_user_by_tc():
+    data = request.get_json()
+    tc = data.get('tc')
+
+    if not tc or len(tc) != 11 or not tc.isdigit():
+        return jsonify({'error': 'Geçersiz TC Kimlik No!'}), 400
+
+    conn = veritabani_baglantisi()
+    cur = conn.cursor()
+    cur.execute('SELECT ad, soyad FROM kullanicilar WHERE tc = ?', (tc,))
+    user = cur.fetchone()
+    conn.close()
+
+    if user:
+        return jsonify({'ad': user['ad'], 'soyad': user['soyad']})
+    return jsonify({'error': 'Kullanıcı bulunamadı!'}), 404
+
+@app.route('/search_booksv2', methods=['POST'])
+def search_booksv2():
+    data = request.get_json()
+    query = data.get('query', '').lower()
+
+    conn = veritabani_baglantisi()
+    cur = conn.cursor()
+    cur.execute('''
+        SELECT id, kitap_adi, stok 
+        FROM kitaplar 
+        WHERE LOWER(kitap_adi) LIKE ? 
+        ORDER BY kitap_adi
+    ''', (f'%{query}%',))
+    kitaplar = cur.fetchall()
+    conn.close()
+
+    kitaplar_list = [dict(kitap) for kitap in kitaplar]
+    return jsonify(kitaplar_list)
+
+# New route to handle borrowing by TC
+@app.route('/borrow_book_by_tc', methods=['POST'])
+def borrow_book_by_tc():
+    if 'tc' not in session or session.get('rol') != 'personel':
+        return jsonify({'error': 'Yetkisiz erişim!'}), 403
+
+    data = request.get_json()
+    tc = data.get('tc')
+    kitap_ids = data.get('kitap_ids')  # Birden fazla kitap ID'si alıyoruz
+    iade_zamani = data.get('iade_zamani')
+
+    if not tc or not kitap_ids or not iade_zamani:
+        return jsonify({'error': 'Eksik bilgi!'}), 400
+
+    conn = veritabani_baglantisi()
+    cur = conn.cursor()
+
+    try:
+        for kitap_id in kitap_ids:
+            # Stok kontrolü
+            cur.execute('SELECT stok FROM kitaplar WHERE id = ?', (kitap_id,))
+            stok = cur.fetchone()
+            if not stok or stok['stok'] <= 0:
+                conn.close()
+                return jsonify({'error': f'Kitap ID {kitap_id} stokta yok!'}), 400
+
+            # Ödünç kaydı ekle
+            cur.execute('''
+                INSERT INTO odunc (tc, kitap_id, odunc_zamani, iade_zamani, durum)
+                VALUES (?, ?, CURRENT_TIMESTAMP, ?, 'alindi')
+            ''', (tc, kitap_id, iade_zamani))
+            
+            # Stok güncelle
+            cur.execute('UPDATE kitaplar SET stok = stok - 1 WHERE id = ?', (kitap_id,))
+
+        conn.commit()
+        conn.close()
+        return jsonify({'success': True})
+    except Exception as e:
+        conn.rollback()
+        conn.close()
+        return jsonify({'error': f'Hata: {str(e)}'}), 500
+    
+
+@app.route('/fetch_borrowed_books', methods=['POST'])
+def fetch_borrowed_books():
+    data = request.get_json()
+    tc = data.get('tc')
+
+    if not tc or len(tc) != 11 or not tc.isdigit():
+        return jsonify({'error': 'Geçersiz TC Kimlik No!'}), 400
+
+    conn = veritabani_baglantisi()
+    cur = conn.cursor()
+    cur.execute('''
+        SELECT k.kitap_adi, k.yazar, o.odunc_zamani, o.iade_zamani
+        FROM odunc o
+        JOIN kitaplar k ON o.kitap_id = k.id
+        WHERE o.tc = ? AND o.durum = 'alindi'
+    ''', (tc,))
+    books = cur.fetchall()
+    conn.close()
+
+    books_list = [dict(book) for book in books]
+    return jsonify(books_list)
+
+
+# Route to render the new page
+@app.route('/tc_arama', methods=['GET'])
+def tc_arama():
+    if 'tc' not in session or session.get('rol') != 'personel':
+        return redirect(url_for('personel_giris'))
+    return render_template('tc_arama.html')
+
 
 @app.route('/kullanici_cikis')
 def kullanici_cikis():

@@ -13,8 +13,7 @@ def create_db():
     # Kullanıcılar tablosu
     c.execute(''' 
         CREATE TABLE kullanicilar (
-            id TEXT PRIMARY KEY,
-            tc TEXT  NOT NULL,
+            tc TEXT PRIMARY KEY,
             sifre TEXT NOT NULL,
             ad TEXT NOT NULL,
             soyad TEXT NOT NULL,

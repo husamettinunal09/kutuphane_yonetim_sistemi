@@ -11,7 +11,8 @@
             min-height: 100vh;
             overflow-x: hidden;
             background-color: #e9ecef;
-            font-family: Arial, sans-serif;
+            font-family: 'Arial', sans-serif;
+            color: #343a40;
         }
         .app-container {
             display: flex;
@@ -33,40 +34,67 @@
         }
         .header-title h1 {
             margin: 0;
+            font-size: 24px;
+            font-weight: 600;
             color: #343a40;
         }
         .button-container {
             display: flex;
             gap: 10px;
         }
-        .logout-btn, .profile-btn, .users-btn {
+        .logout-btn {
             text-decoration: none;
-            padding: 8px 15px;
-            background-color: #adb5bd;
+            padding: 10px 20px; /* Increased padding for a larger button */
+            background: linear-gradient(90deg, #6c757d, #495057); /* Gradient for modern look */
             color: white;
-            border-radius: 4px;
-            font-size: 14px;
-            transition: background-color 0.3s ease;
             border: none;
+            border-radius: 8px; /* Rounded corners */
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease; /* Smooth transition for all properties */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Subtle shadow */
             cursor: pointer;
+            text-align: center;
         }
-        .logout-btn:hover, .profile-btn:hover, .users-btn:hover {
-            background-color: #868e96;
+        .logout-btn:hover {
+            background: linear-gradient(90deg, #495057, #343a40); /* Darker gradient on hover */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Enhanced shadow on hover */
+            transform: translateY(-2px); /* Slight lift effect */
+        }
+        .content-container {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap; /* Responsive behavior */
+        }
+        .section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            flex: 1; /* Equal width for both sections */
+            min-width: 300px; /* Minimum width for responsiveness */
         }
         table {
             border-collapse: collapse;
             width: 100%;
             margin-bottom: 20px;
-            background-color: #f8f9fa;
+            background-color: #fff;
         }
         th, td {
             border: 1px solid #adb5bd;
-            padding: 8px;
+            padding: 10px;
             text-align: left;
             color: #495057;
         }
         th {
             background-color: #ced4da;
+            font-weight: 600;
+        }
+        tbody tr {
+            transition: background-color 0.3s ease;
+        }
+        tbody tr:hover {
+            background-color: #f1f3f5;
         }
         .form-group {
             margin-bottom: 15px;
@@ -75,13 +103,20 @@
             display: block;
             margin-bottom: 5px;
             color: #495057;
+            font-weight: 500;
         }
         .form-group input, .form-group select {
             width: 100%;
             padding: 8px;
             border: 1px solid #adb5bd;
             border-radius: 4px;
-            background-color: #f8f9fa;
+            background-color: #fff;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        .form-group input:focus, .form-group select:focus {
+            border-color: #6c757d;
+            box-shadow: 0 0 5px rgba(108, 117, 125, 0.3);
+            outline: none;
         }
         .submit-btn {
             padding: 10px;
@@ -90,10 +125,11 @@
             border: none;
             border-radius: 4px;
             cursor: pointer;
-            transition: background-color 0.3s ease;
+            transition: background-color 0.3s ease, transform 0.1s ease;
         }
         .submit-btn:hover {
             background-color: #495057;
+            transform: translateY(-1px);
         }
         .delete-btn {
             padding: 6px 12px;
@@ -102,16 +138,65 @@
             border: none;
             border-radius: 4px;
             cursor: pointer;
-            transition: background-color 0.3s ease;
+            transition: background-color 0.3s ease, transform 0.1s ease;
         }
         .delete-btn:hover {
             background-color: #b02a37;
+            transform: translateY(-1px);
         }
         .mesaj {
             color: #28a745;
             margin: 10px 0;
+            font-weight: 500;
+        }
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .content-container {
+                flex-direction: column;
+            }
+            .section {
+                min-width: 100%;
+            }
+        }
+        /* TC Kimlik No Validation Feedback */
+        .tc-error {
+            color: #dc3545;
+            font-size: 12px;
+            margin-top: 5px;
+            display: none;
         }
     </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const tcInput = document.getElementById('tc');
+            const tcError = document.querySelector('.tc-error');
+            const form = document.querySelector('form');
+
+            tcInput.addEventListener('input', function() {
+                const tcValue = this.value.replace(/\D/g, ''); // Only keep digits
+                this.value = tcValue.slice(0, 11); // Limit to 11 characters
+
+                if (tcValue.length !== 11) {
+                    tcError.style.display = 'block';
+                    tcError.textContent = 'TC Kimlik No 11 haneli olmalıdır!';
+                } else if (parseInt(tcValue[10]) % 2 !== 0) {
+                    tcError.style.display = 'block';
+                    tcError.textContent = 'TC Kimlik No\'nun son rakamı çift olmalıdır!';
+                } else {
+                    tcError.style.display = 'none';
+                }
+            });
+
+            form.addEventListener('submit', function(event) {
+                const tcValue = tcInput.value;
+                if (tcValue.length !== 11 || parseInt(tcValue[10]) % 2 !== 0) {
+                    event.preventDefault();
+                    tcError.style.display = 'block';
+                    tcError.textContent = tcValue.length !== 11 ? 'TC Kimlik No 11 haneli olmalıdır!' : 'TC Kimlik No\'nun son rakamı çift olmalıdır!';
+                }
+            });
+        });
+    </script>
 </head>
 <body>
     <div class="app-container">
@@ -132,54 +217,58 @@
                 {% endif %}
             {% endwith %}
 
-            <!-- Kullanıcı Ekleme Formu -->
-            <div class="section">
-                <h2>Yeni Kullanıcı Ekle</h2>
-                <form action="{{ url_for('kullanici_yonetim') }}" method="POST">
-                    <div class="form-group">
-                        <label for="tc">TC Kimlik No:</label>
-                        <input type="text" id="tc" name="tc" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="sifre">Şifre:</label>
-                        <input type="password" id="sifre" name="sifre" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="ad">Ad:</label>
-                        <input type="text" id="ad" name="ad" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="soyad">Soyad:</label>
-                        <input type="text" id="soyad" name="soyad" required>
-                    </div>
-                    <button type="submit" class="submit-btn">Kullanıcı Ekle</button>
-                </form>
-            </div>
+            <!-- Kullanıcı Ekle ve Kullanıcı Listesi Yan Yana -->
+            <div class="content-container">
+                <!-- Kullanıcı Ekleme Formu -->
+                <div class="section">
+                    <h2>Yeni Kullanıcı Ekle</h2>
+                    <form action="{{ url_for('kullanici_yonetim') }}" method="POST">
+                        <div class="form-group">
+                            <label for="tc">TC Kimlik No:</label>
+                            <input type="text" id="tc" name="tc" required pattern="\d{11}" maxlength="11" placeholder="11 haneli TC Kimlik No ">
+                            <div class="tc-error"></div>
+                        </div>
+                        <div class="form-group">
+                            <label for="sifre">Şifre:</label>
+                            <input type="password" id="sifre" name="sifre" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="ad">Ad:</label>
+                            <input type="text" id="ad" name="ad" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="soyad">Soyad:</label>
+                            <input type="text" id="soyad" name="soyad" required>
+                        </div>
+                        <button type="submit" class="submit-btn">Kullanıcı Ekle</button>
+                    </form>
+                </div>
 
-            <!-- Kullanıcı Listesi -->
-            <div class="section">
-                <h2>Kullanıcı Listesi</h2>
-                <table>
-                    <tr>
-                        <th>TC Kimlik No</th>
-                        <th>Ad</th>
-                        <th>Soyad</th>
-                        <th>İşlemler</th>
-                    </tr>
-                    {% for kullanici in kullanicilar %}
-                    <tr>
-                        <td>{{ kullanici['tc'] }}</td>
-                        <td>{{ kullanici['ad'] }}</td>
-                        <td>{{ kullanici['soyad'] }}</td>
-                        <td>
-                            <form action="{{ url_for('kullanici_yonetim') }}" method="POST" style="display:inline;">
-                                <input type="hidden" name="sil_tc" value="{{ kullanici['tc'] }}">
-                                <button type="submit" class="delete-btn" onclick="return confirm('Bu kullanıcıyı silmek istediğinizden emin misiniz?');">Sil</button>
-                            </form>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </table>
+                <!-- Kullanıcı Listesi -->
+                <div class="section">
+                    <h2>Kullanıcı Listesi</h2>
+                    <table>
+                        <tr>
+                            <th>TC Kimlik No</th>
+                            <th>Ad</th>
+                            <th>Soyad</th>
+                            <th>İşlemler</th>
+                        </tr>
+                        {% for kullanici in kullanicilar %}
+                        <tr>
+                            <td>{{ kullanici['tc'] }}</td>
+                            <td>{{ kullanici['ad'] }}</td>
+                            <td>{{ kullanici['soyad'] }}</td>
+                            <td>
+                                <form action="{{ url_for('kullanici_yonetim') }}" method="POST" style="display:inline;">
+                                    <input type="hidden" name="sil_tc" value="{{ kullanici['tc'] }}">
+                                    <button type="submit" class="delete-btn" onclick="return confirm('Bu kullanıcıyı silmek istediğinizden emin misiniz?');">Sil</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </table>
+                </div>
             </div>
         </div>
     </div>

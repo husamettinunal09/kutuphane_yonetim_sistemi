@@ -4,95 +4,91 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kütüphane</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
-            margin: 0;
-            padding: 0;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
             min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
             overflow-x: hidden;
-            background-color: #e9ecef;
-            font-family: Arial, sans-serif;
         }
-
         .app-container {
             display: flex;
             min-height: 100vh;
             overflow-x: hidden;
             position: relative;
         }
-
         .library-section {
             flex: 1;
-            padding: 20px;
-            background-color: #dee2e6;
-            position: relative;
+            padding: 30px;
+            background: #fff;
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            animation: fadeIn 0.5s ease-in;
         }
-
-        .header-title {
+        .header-container {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #e9ecef;
+            border-radius: 10px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
         }
-
-        .header-title h1 {
+        .welcome-text {
             margin: 0;
-            color: #343a40;
+            font-size: 1.2em;
+            color: #495057;
         }
-
         .button-container {
             display: flex;
-            gap: 10px; /* Butonlar arasında boşluk */
+            gap: 10px;
         }
-
         .logout-btn {
-            text-decoration: none;
             padding: 8px 15px;
-            background-color: #adb5bd;
+            background: linear-gradient(90deg, #dc3545, #c82333);
             color: white;
-            border-radius: 4px;
-            font-size: 14px;
-            transition: background-color 0.3s ease;
+            border: none;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: transform 0.2s, box-shadow 0.2s;
         }
-
         .logout-btn:hover {
-            background-color: #868e96;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            background: linear-gradient(90deg, #c82333, #b71c1c);
         }
-
-        .profile-dropdown {
-            position: relative;
-        }
-
         .profile-btn {
             padding: 8px 15px;
-            background-color: #adb5bd;
+            background: linear-gradient(90deg, #6c757d, #5a6268);
             color: white;
-            border-radius: 4px;
-            font-size: 14px;
-            cursor: pointer;
             border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
         }
-
         .profile-btn:hover {
-            background-color: #868e96;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            background: linear-gradient(90deg, #5a6268, #4b5359);
         }
-
         .profile-content {
             display: none;
             position: absolute;
-            right: 0;
-            background-color: #f8f9fa;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            right: 30px;
+            top: 80px;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
             z-index: 1000;
-            padding: 10px;
-            border-radius: 5px;
             width: 300px;
+            animation: slideIn 0.3s ease-in;
         }
-
         .profile-content.active {
             display: block;
         }
-
         .overlay {
             display: none;
             position: fixed;
@@ -100,72 +96,44 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.3); /* Arka planı koyulaştırır */
+            background: rgba(0, 0, 0, 0.3);
             z-index: 999;
         }
-
         .overlay.active {
             display: block;
         }
-
-        .header-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin: 20px 0;
-            padding: 10px;
-            background-color: #ced4da;
-            border-radius: 5px;
-        }
-
-        .welcome-text {
-            margin: 0;
-            font-size: 1.2em;
-            color: #495057;
-        }
-
         table {
-            border-collapse: collapse;
             width: 100%;
             margin-bottom: 20px;
-            table-layout: fixed;
-            background-color: #f8f9fa;
-        }
-
-        th, td {
-            border: 1px solid #adb5bd;
-            padding: 8px;
-            text-align: left;
+            background: #f8f9fa;
+            border-radius: 10px;
             overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
+        }
+        th, td {
+            padding: 15px;
+            text-align: left;
+            vertical-align: middle;
             color: #495057;
         }
-
         th {
-            background-color: #ced4da;
-            padding: 5px;
+            background: #007bff;
+            color: #fff;
+            border: none;
         }
-
-        th:nth-child(1), td:nth-child(1) { width: 20%; }
-        th:nth-child(2), td:nth-child(2) { width: 20%; }
-        th:nth-child(3), td:nth-child(3) { width: 20%; }
-        th:nth-child(4), td:nth-child(4) { width: 20%; }
-        th:nth-child(5), td:nth-child(5) { width: 20%; }
-
-        td:hover {
-            white-space: normal;
-            overflow: visible;
-            position: relative;
-            background-color: #e9ecef;
-            z-index: 1;
+        tbody tr:nth-child(odd) {
+            background: #fff;
         }
-
+        tbody tr:nth-child(even) {
+            background: #f1f3f5;
+        }
         .mesaj {
+            margin: 15px 0;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 10px;
             color: #28a745;
-            margin: 10px 0;
+            text-align: center;
         }
-
         .pagination {
             display: flex;
             justify-content: center;
@@ -173,73 +141,53 @@
             padding: 0;
             margin: 20px 0;
         }
-
         .pagination li {
             margin: 0 5px;
         }
-
         .pagination a {
-            text-decoration: none;
             padding: 8px 12px;
-            border: 1px solid #adb5bd;
-            color: #6c757d;
-            border-radius: 4px;
-            transition: background-color 0.3s ease;
-        }
-
-        .pagination a:hover {
-            background-color: #ced4da;
-        }
-
-        .pagination .active {
-            background-color: #6c757d;
+            background: #007bff;
             color: white;
-            border-color: #6c757d;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: background 0.3s;
         }
-
+        .pagination a:hover {
+            background: #0056b3;
+        }
+        .pagination .active {
+            background: #0056b3;
+        }
         .pagination .disabled {
-            color: #adb5bd;
+            background: #adb5bd;
             pointer-events: none;
-            background-color: #f8f9fa;
-            border-color: #adb5bd;
         }
-
         .profile-container {
             display: flex;
             justify-content: center;
-            align-items: center;
             margin: 20px 0;
         }
-
         .profile-photo {
             width: 100px;
             height: 100px;
             border-radius: 50%;
-            overflow: hidden; /* Taşan kısımları gizler */
+            overflow: hidden;
             cursor: pointer;
             position: relative;
             border: 2px solid #6c757d;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background-color: #6c757d; /* Beyaz alanları kapatmak için arka plan rengi (isteğe bağlı) */
+            background: #6c757d;
         }
-
         .profile-photo img {
             width: 100%;
             height: 100%;
-            object-fit: cover; /* Fotoğrafı kırparak dairenin içini doldurur */
-            display: block; /* Boşlukları önlemek için */
+            object-fit: cover;
         }
-
         .profile-photo input[type="file"] {
             display: none;
         }
-
         .photo-label {
             position: absolute;
             bottom: 0;
-            left: 0;
             width: 100%;
             background: rgba(0, 0, 0, 0.5);
             color: white;
@@ -249,107 +197,93 @@
             opacity: 0;
             transition: opacity 0.3s ease;
         }
-
         .profile-photo:hover .photo-label {
             opacity: 1;
         }
-
         .profile-section {
-            background-color: #f8f9fa;
-            padding: 20px;
-            border-radius: 5px;
-            margin: 20px 0;
+            padding: 15px;
+            background: #e9ecef;
+            border-radius: 10px;
         }
-
         .profile-section h2 {
             margin-top: 0;
             color: #343a40;
         }
-
-        .profile-section form {
-            display: flex;
-            flex-direction: column;
-        }
-
         .profile-section label {
             margin: 10px 0 5px;
             color: #495057;
         }
-
         .profile-section input {
+            width: 100%;
             padding: 8px;
             margin-bottom: 10px;
-            border: 1px solid #adb5bd;
-            border-radius: 4px;
-            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #f8f9fa;
         }
-
         .profile-section button {
+            width: 100%;
             padding: 10px;
-            background-color: #6c757d;
+            background: linear-gradient(90deg, #28a745, #218838);
             color: white;
             border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-top: 10px;
-            transition: background-color 0.3s ease;
+            border-radius: 8px;
+            transition: transform 0.2s, box-shadow 0.2s;
         }
-
         .profile-section button:hover {
-            background-color: #495057;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            background: linear-gradient(90deg, #218838, #1e7e34);
         }
-
-        /* Arama alanları için yeni stiller */
-        .search-input {
+        .search-input, .category-select {
             width: 100%;
-            padding: 5px;
-            border: 1px solid #adb5bd;
-            border-radius: 4px;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
             font-size: 14px;
+            background: #fff;
         }
-        
         .range-container {
             display: flex;
             gap: 5px;
         }
-        
         .range-container input {
-            width: 45%;
-            padding: 5px;
-            border: 1px solid #adb5bd;
-            border-radius: 4px;
+            width: 48%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
             font-size: 14px;
+            background: #fff;
         }
-        
-        .category-select {
-            width: 100%;
-            padding: 5px;
-            border: 1px solid #adb5bd;
-            border-radius: 4px;
-            font-size: 14px;
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes slideIn {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
         }
     </style>
 </head>
 <body>
     <div class="app-container">
         <div class="library-section" id="librarySection">
-            <div class="header-title">
-                <h1>Hoşgeldiniz, {{ session['ad_soyad'] }}</h1>
+            <div class="header-container">
+                <h2 class="welcome-text">Hoşgeldiniz {{ session['ad_soyad'] }}</h2>
                 <div class="button-container">
                     <button class="profile-btn" id="profileBtn">Profil</button>
                     <a href="{{ url_for('kullanici_cikis') }}" class="logout-btn">Çıkış Yap</a>
                 </div>
             </div>
 
-             
             <div class="overlay" id="overlay"></div>
             <div class="profile-dropdown">
                 <div class="profile-content" id="profileContent">
-                    <!-- Profil Fotoğrafı Alanı -->
                     <div class="profile-container">
                         <div class="profile-photo" onclick="document.getElementById('foto').click();">
                             <form id="photoForm" action="{{ url_for('foto_degistir') }}" method="POST" enctype="multipart/form-data">
                                 <input type="file" id="foto" name="foto" accept="image/*" onchange="this.form.submit()">
+                                <span class="photo-label">Fotoğraf Değiştir</span>
                                 {% if foto %}
                                     <img src="data:image/jpeg;base64,{{ foto }}" alt="Profil Fotoğrafı">
                                 {% else %}
@@ -358,8 +292,6 @@
                             </form>
                         </div>
                     </div>
-
-                    
                     <div class="profile-section">
                         <h2>Şifre Değiştir</h2>
                         <form action="{{ url_for('sifre_degistir') }}" method="POST">
@@ -375,235 +307,217 @@
                 </div>
             </div>
 
-            <div class="header-container">
-                <h2 class="welcome-text">Hoşgeldiniz {{ session['ad_soyad'] }}</h2>
-            </div>
-
             {% with messages = get_flashed_messages() %}
                 {% if messages %}
                     {% for message in messages %}
-                        <p class="mesaj">{{ message }}</p>
+                        <div class="mesaj">{{ message }}</div>
                     {% endfor %}
                 {% endif %}
             {% endwith %}
 
             <h2>Ödünç Aldığınız Kitaplar</h2>
-            <table style="width: 100%; table-layout: fixed;">
+<div class="table-responsive">
+    <table>
+        <thead>
+            <tr>
+                <th>Kitap Adı</th>
+                <th>Yazar</th>
+                <th>Ödünç Alma Zamanı</th>
+                <th>İade Etme Zamanı</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if odunc_kitaplar %}
+                {% for kitap in odunc_kitaplar %}
                 <tr>
-                    <th style="width: 40%;">Kitap Adı</th>
-                    <th style="width: 40%;">Yazar</th>
-                    <th style="width: 20%;">Ödünç Alma Zamanı</th>
+                    <td>{{ kitap[0] }}</td>
+                    <td>{{ kitap[1] }}</td>
+                    <td>{{ kitap[2] or 'Belirtilmemiş' }}</td>
+                    <td>{{ kitap[3] or 'İade Edilmedi' }}</td>
                 </tr>
-                {% if odunc_kitaplar %}
-                    {% for kitap in odunc_kitaplar %}
-                    <tr>
-                        <td>{{ kitap['kitap_adi'] }}</td>
-                        <td>{{ kitap['yazar'] }}</td>
-                        <td>{{ kitap['odunc_zamani'] }}</td>
-                    </tr>
-                    {% endfor %}
-                {% else %}
-                    <tr>
-                        <td colspan="3">Henüz ödünç aldığınız kitap yok.</td>
-                    </tr>
-                {% endif %}
-            </table>
-
-<h2>Mevcut Kitaplar</h2>
-<form id="aramaFormu" action="{{ url_for('kutuphane_kullanici') }}" method="GET">
-    <table id="kitaplarTablosu" style="width: 100%; table-layout: fixed;">
-        <tr>
-            <th style="width: 23%;">
-                <label for="kitapAdiArama">Kitap adı:</label>
-                <input type="text" id="kitapAdiArama" name="kitap_adi" class="search-input" placeholder="Kitap adı ara..." style="width: 75%;" value="{{ request.args.get('kitap_adi', '') }}">
-            </th>
-            <th style="width: 23%;">
-                <label for="yazarAdiArama">Yazar adı:</label>
-                <input type="text" id="yazarAdiArama" name="yazar" class="search-input" placeholder="Yazar adı ara..." style="width: 75%;" value="{{ request.args.get('yazar', '') }}">
-            </th>
-            <th style="width: 23%;">
-                <div class="range-container">
-                    <label for="minSayfa">Min sayfa:</label>
-                    <input type="number" id="minSayfa" name="min_sayfa" class="search-input" placeholder="Min" min="0" value="{{ request.args.get('min_sayfa', '') }}">
-                    <label for="maxSayfa">Max sayfa:</label>
-                    <input type="number" id="maxSayfa" name="max_sayfa" class="search-input" placeholder="Max" min="0" value="{{ request.args.get('max_sayfa', '') }}">
-                </div>
-            </th>
-            <th style="width: 23%;">
-                <label for="kategoriArama">Kategori:</label>
-                <select id="kategoriArama" name="kategori" class="category-select" style="width: 79%;">
-                    <option value="">Tüm Kategoriler</option>
-                    {% for kategori in kategoriler %}
-                        <option value="{{ kategori }}" {{ 'selected' if request.args.get('kategori') == kategori else '' }}>{{ kategori }}</option>
-                    {% endfor %}
-                </select>
-            </th>
-            <th style="width: 8%;">
-                <label for="stokArama">Stok:</label>
-            </th>
-        </tr>
-        {% for kitap in kitaplar %}
-        <tr class="kitap-satiri">
-            <td>{{ kitap[1] }}</td>
-            <td>{{ kitap[2] }}</td>
-            <td>{{ kitap[3] }}</td>
-            <td>{{ kitap[4] }}</td>
-            <td>{{ kitap[5] }}</td>
-        </tr>
-        {% endfor %}
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="4">Henüz ödünç aldığınız kitap yok.</td>
+                </tr>
+            {% endif %}
+        </tbody>
     </table>
-</form>
+</div>
 
+            <h2>Mevcut Kitaplar</h2>
+            <form id="aramaFormu" action="{{ url_for('kutuphane_kullanici') }}" method="GET">
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>
+                                    <label for="kitapAdiArama">Kitap Adı:</label>
+                                    <input type="text" id="kitapAdiArama" name="kitap_adi" class="search-input" placeholder="Kitap adı ara..." value="{{ request.args.get('kitap_adi', '') }}">
+                                </th>
+                                <th>
+                                    <label for="yazarAdiArama">Yazar Adı:</label>
+                                    <input type="text" id="yazarAdiArama" name="yazar" class="search-input" placeholder="Yazar adı ara..." value="{{ request.args.get('yazar', '') }}">
+                                </th>
+                                <th>
+                                    <div class="range-container">
+                                        <div>
+                                            <label for="minSayfa">Min Sayfa:</label>
+                                            <input type="number" id="minSayfa" name="min_sayfa" class="search-input" placeholder="Min" min="0" value="{{ request.args.get('min_sayfa', '') }}">
+                                        </div>
+                                        <div>
+                                            <label for="maxSayfa">Max Sayfa:</label>
+                                            <input type="number" id="maxSayfa" name="max_sayfa" class="search-input" placeholder="Max" min="0" value="{{ request.args.get('max_sayfa', '') }}">
+                                        </div>
+                                    </div>
+                                </th>
+                                <th>
+                                    <label for="kategoriArama">Kategori:</label>
+                                    <select id="kategoriArama" name="kategori" class="category-select">
+                                        <option value="">Tüm Kategoriler</option>
+                                        {% for kategori in kategoriler %}
+                                            <option value="{{ kategori }}" {{ 'selected' if request.args.get('kategori') == kategori else '' }}>{{ kategori }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </th>
+                                <th>
+                                    <label>Stok:</label>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for kitap in kitaplar %}
+                            <tr class="kitap-satiri">
+                                <td>{{ kitap[1] }}</td>
+                                <td>{{ kitap[2] }}</td>
+                                <td>{{ kitap[3] }}</td>
+                                <td>{{ kitap[4] }}</td>
+                                <td>{{ kitap[5] }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </form>
 
-{% if toplam_sayfa > 1 %}
-<ul class="pagination">
-    <li>
-        <a href="{{ url_for('kutuphane_kullanici', sayfa=sayfa-1, kitap_adi=request.args.get('kitap_adi', ''), yazar=request.args.get('yazar', ''), min_sayfa=request.args.get('min_sayfa', ''), max_sayfa=request.args.get('max_sayfa', ''), kategori=request.args.get('kategori', '')) }}"
-           class="{{ 'disabled' if sayfa == 1 else '' }}">
-            Önceki
-        </a>
-    </li>
-    {% for sayfa_num in range(1, toplam_sayfa + 1) %}
-    <li>
-        <a href="{{ url_for('kutuphane_kullanici', sayfa=sayfa_num, kitap_adi=request.args.get('kitap_adi', ''), yazar=request.args.get('yazar', ''), min_sayfa=request.args.get('min_sayfa', ''), max_sayfa=request.args.get('max_sayfa', ''), kategori=request.args.get('kategori', '')) }}"
-           class="{{ 'active' if sayfa == sayfa_num else '' }}">
-            {{ sayfa_num }}
-        </a>
-    </li>
-    {% endfor %}
-    <li>
-        <a href="{{ url_for('kutuphane_kullanici', sayfa=sayfa+1, kitap_adi=request.args.get('kitap_adi', ''), yazar=request.args.get('yazar', ''), min_sayfa=request.args.get('min_sayfa', ''), max_sayfa=request.args.get('max_sayfa', ''), kategori=request.args.get('kategori', '')) }}"
-           class="{{ 'disabled' if sayfa == toplam_sayfa else '' }}">
-            Sonraki
-        </a>
-    </li>
-</ul>
-{% endif %}
-                            
-
+            {% if toplam_sayfa > 1 %}
+            <ul class="pagination">
+                <li>
+                    <a href="{{ url_for('kutuphane_kullanici', sayfa=sayfa-1, kitap_adi=request.args.get('kitap_adi', ''), yazar=request.args.get('yazar', ''), min_sayfa=request.args.get('min_sayfa', ''), max_sayfa=request.args.get('max_sayfa', ''), kategori=request.args.get('kategori', '')) }}"
+                       class="{{ 'disabled' if sayfa == 1 else '' }}">Önceki</a>
+                </li>
+                {% for sayfa_num in range(1, toplam_sayfa + 1) %}
+                <li>
+                    <a href="{{ url_for('kutuphane_kullanici', sayfa=sayfa_num, kitap_adi=request.args.get('kitap_adi', ''), yazar=request.args.get('yazar', ''), min_sayfa=request.args.get('min_sayfa', ''), max_sayfa=request.args.get('max_sayfa', ''), kategori=request.args.get('kategori', '')) }}"
+                       class="{{ 'active' if sayfa == sayfa_num else '' }}">{{ sayfa_num }}</a>
+                </li>
+                {% endfor %}
+                <li>
+                    <a href="{{ url_for('kutuphane_kullanici', sayfa=sayfa+1, kitap_adi=request.args.get('kitap_adi', ''), yazar=request.args.get('yazar', ''), min_sayfa=request.args.get('min_sayfa', ''), max_sayfa=request.args.get('max_sayfa', ''), kategori=request.args.get('kategori', '')) }}"
+                       class="{{ 'disabled' if sayfa == toplam_sayfa else '' }}">Sonraki</a>
+                </li>
+            </ul>
+            {% endif %}
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-
-document.getElementById('aramaFormu').addEventListener('submit', function(event) {
-    event.preventDefault(); // Sayfa yenilemeyi önle
-    const query = new URLSearchParams(new FormData(this)).toString();
-    window.location.href = "/kutuphane_kullanici?" + query; // Backend'den tüm veriyi getir
-});
-
-
-    document.addEventListener('DOMContentLoaded', function() {
-        // Tüm filtreleme elemanlarını al
-        const kitapAdiArama = document.getElementById('kitapAdiArama');
-        const yazarAdiArama = document.getElementById('yazarAdiArama');
-        const minSayfa = document.getElementById('minSayfa');
-        const maxSayfa = document.getElementById('maxSayfa');
-        const kategoriArama = document.getElementById('kategoriArama');
-        const aramaFormu = document.getElementById('aramaFormu');
-        const kitapSatirlari = document.querySelectorAll('.kitap-satiri');
-        const profileBtn = document.getElementById('profileBtn');
-        const profileContent = document.getElementById('profileContent');
-        const overlay = document.getElementById('overlay');
-        const profilePhoto = document.querySelector('.profile-photo');
-        const fileInput = document.getElementById('foto');
-
-        // Tüm filtreleme girdilerine olay dinleyicileri ekle
-        kitapAdiArama.addEventListener('input', filtreUygula);
-        yazarAdiArama.addEventListener('input', filtreUygula);
-        minSayfa.addEventListener('input', filtreUygula);
-        maxSayfa.addEventListener('input', filtreUygula);
-        kategoriArama.addEventListener('change', filtreUygula);
-
-        // Form gönderimi olayı ekle
-        aramaFormu.addEventListener('submit', function(event) {
-            // Eğer tüm filtreler boşsa, gereksiz sayfa yenilemeyi önlemek için varsayılan gönderimi engelle
-            if (kitapAdiArama.value === '' && 
-                yazarAdiArama.value === '' && 
-                minSayfa.value === '' && 
-                maxSayfa.value === '' && 
-                kategoriArama.value === '') {
-                event.preventDefault();
-            }
+        document.getElementById('aramaFormu').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const query = new URLSearchParams(new FormData(this)).toString();
+            window.location.href = "/kutuphane_kullanici?" + query;
         });
 
-        // Minimum sayfa sayısının maksimum sayfa sayısından büyük olmamasını sağla
-        minSayfa.addEventListener('change', function() {
-            if (maxSayfa.value !== '' && parseInt(minSayfa.value) > parseInt(maxSayfa.value)) {
-                maxSayfa.value = minSayfa.value;
-            }
-        });
-        
-        maxSayfa.addEventListener('change', function() {
-            if (minSayfa.value !== '' && parseInt(maxSayfa.value) < parseInt(minSayfa.value)) {
-                minSayfa.value = maxSayfa.value;
-            }
-        });
+        document.addEventListener('DOMContentLoaded', function() {
+            const kitapAdiArama = document.getElementById('kitapAdiArama');
+            const yazarAdiArama = document.getElementById('yazarAdiArama');
+            const minSayfa = document.getElementById('minSayfa');
+            const maxSayfa = document.getElementById('maxSayfa');
+            const kategoriArama = document.getElementById('kategoriArama');
+            const aramaFormu = document.getElementById('aramaFormu');
+            const kitapSatirlari = document.querySelectorAll('.kitap-satiri');
+            const profileBtn = document.getElementById('profileBtn');
+            const profileContent = document.getElementById('profileContent');
+            const overlay = document.getElementById('overlay');
+            const profilePhoto = document.querySelector('.profile-photo');
+            const fileInput = document.getElementById('foto');
 
-        // Ana filtreleme fonksiyonu
-        function filtreUygula() {
-            const kitapAdi = kitapAdiArama.value.toLowerCase();
-            const yazarAdi = yazarAdiArama.value.toLowerCase();
-            const min = minSayfa.value !== '' ? parseInt(minSayfa.value) : 0;
-            const max = maxSayfa.value !== '' ? parseInt(maxSayfa.value) : Infinity;
-            const kategori = kategoriArama.value;
-            
-            kitapSatirlari.forEach(satir => {
-                const kitapAdiHucre = satir.children[0].textContent.toLowerCase();
-                const yazarAdiHucre = satir.children[1].textContent.toLowerCase();
-                const sayfaSayisi = parseInt(satir.children[2].textContent);
-                const kategoriHucre = satir.children[3].textContent;
-                
-                const kitapAdiUygun = kitapAdiHucre.includes(kitapAdi);
-                const yazarAdiUygun = yazarAdiHucre.includes(yazarAdi);
-                const sayfaSayisiUygun = sayfaSayisi >= min && sayfaSayisi <= max;
-                const kategoriUygun = kategori === '' || kategoriHucre === kategori;
-                
-                if (kitapAdiUygun && yazarAdiUygun && sayfaSayisiUygun && kategoriUygun) {
-                    satir.style.display = '';
-                } else {
-                    satir.style.display = 'none';
+            kitapAdiArama.addEventListener('input', filtreUygula);
+            yazarAdiArama.addEventListener('input', filtreUygula);
+            minSayfa.addEventListener('input', filtreUygula);
+            maxSayfa.addEventListener('input', filtreUygula);
+            kategoriArama.addEventListener('change', filtreUygula);
+
+            aramaFormu.addEventListener('submit', function(event) {
+                if (kitapAdiArama.value === '' && 
+                    yazarAdiArama.value === '' && 
+                    minSayfa.value === '' && 
+                    maxSayfa.value === '' && 
+                    kategoriArama.value === '') {
+                    event.preventDefault();
                 }
             });
-        }
 
-        // Tüm filtreleri temizleme fonksiyonu
-        function filtreTemizle() {
-            kitapAdiArama.value = '';
-            yazarAdiArama.value = '';
-            minSayfa.value = '';
-            maxSayfa.value = '';
-            kategoriArama.value = '';
-            
-            // Tüm satırları görünür yap
-            kitapSatirlari.forEach(satir => {
-                satir.style.display = '';
+            minSayfa.addEventListener('change', function() {
+                if (maxSayfa.value !== '' && parseInt(minSayfa.value) > parseInt(maxSayfa.value)) {
+                    maxSayfa.value = minSayfa.value;
+                }
             });
-        }
+            
+            maxSayfa.addEventListener('change', function() {
+                if (minSayfa.value !== '' && parseInt(maxSayfa.value) < parseInt(minSayfa.value)) {
+                    minSayfa.value = maxSayfa.value;
+                }
+            });
 
-        // Profil fotoğrafı değiştirme
-        profilePhoto.addEventListener('click', () => {
-            fileInput.click();
-        });
-    
-        // Profil açılır menü
-        profileBtn.addEventListener('click', () => {
-            profileContent.classList.toggle('active');
-            overlay.classList.toggle('active');
-        });
-    
-        overlay.addEventListener('click', () => {
-            profileContent.classList.remove('active');
-            overlay.classList.remove('active');
-        });
-    
-        document.addEventListener('click', (e) => {
-            if (!profileContent.contains(e.target) && e.target !== profileBtn) {
+            function filtreUygula() {
+                const kitapAdi = kitapAdiArama.value.toLowerCase();
+                const yazarAdi = yazarAdiArama.value.toLowerCase();
+                const min = minSayfa.value !== '' ? parseInt(minSayfa.value) : 0;
+                const max = maxSayfa.value !== '' ? parseInt(maxSayfa.value) : Infinity;
+                const kategori = kategoriArama.value;
+                
+                kitapSatirlari.forEach(satir => {
+                    const kitapAdiHucre = satir.children[0].textContent.toLowerCase();
+                    const yazarAdiHucre = satir.children[1].textContent.toLowerCase();
+                    const sayfaSayisi = parseInt(satir.children[2].textContent);
+                    const kategoriHucre = satir.children[3].textContent;
+                    
+                    const kitapAdiUygun = kitapAdiHucre.includes(kitapAdi);
+                    const yazarAdiUygun = yazarAdiHucre.includes(yazarAdi);
+                    const sayfaSayisiUygun = sayfaSayisi >= min && sayfaSayisi <= max;
+                    const kategoriUygun = kategori === '' || kategoriHucre === kategori;
+                    
+                    if (kitapAdiUygun && yazarAdiUygun && sayfaSayisiUygun && kategoriUygun) {
+                        satir.style.display = '';
+                    } else {
+                        satir.style.display = 'none';
+                    }
+                });
+            }
+
+            profilePhoto.addEventListener('click', () => {
+                fileInput.click();
+            });
+        
+            profileBtn.addEventListener('click', () => {
+                profileContent.classList.toggle('active');
+                overlay.classList.toggle('active');
+            });
+        
+            overlay.addEventListener('click', () => {
                 profileContent.classList.remove('active');
                 overlay.classList.remove('active');
-            }
+            });
+        
+            document.addEventListener('click', (e) => {
+                if (!profileContent.contains(e.target) && e.target !== profileBtn) {
+                    profileContent.classList.remove('active');
+                    overlay.classList.remove('active');
+                }
+            });
         });
-    });
-</script>
-</body>
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'91eb36842cb7677e',t:'MTc0MTY5Nzc5Ny4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>

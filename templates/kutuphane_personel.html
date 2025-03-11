@@ -4,14 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Personel Kütüphane Paneli</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
-            margin: 0;
-            padding: 0;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
             min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
             overflow-x: hidden;
-            background-color: #e9ecef;
-            font-family: Arial, sans-serif;
         }
         .app-container {
             display: flex;
@@ -21,51 +21,83 @@
         }
         .library-section {
             flex: 1;
-            padding: 20px;
-            background-color: #dee2e6;
-            position: relative;
+            padding: 30px;
+            background: #fff;
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            animation: fadeIn 0.5s ease-in;
         }
-        .header-title {
+        .header-container {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #e9ecef;
+            border-radius: 10px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
         }
-        .header-title h1 {
+        .welcome-text {
             margin: 0;
-            color: #343a40;
+            font-size: 1.2em;
+            color: #495057;
         }
         .button-container {
             display: flex;
             gap: 10px;
         }
-        .logout-btn, .profile-btn, .users-btn {
-            text-decoration: none;
+        .logout-btn, .profile-btn, .users-btn, .islemler-btn {
             padding: 8px 15px;
-            background-color: #adb5bd;
-            color: white;
-            border-radius: 4px;
-            font-size: 14px;
-            transition: background-color 0.3s ease;
             border: none;
-            cursor: pointer;
+            border-radius: 8px;
+            color: #fff;
+            text-decoration: none;
+            transition: transform 0.2s, box-shadow 0.2s;
+            font-size: 14px;
         }
-        .logout-btn:hover, .profile-btn:hover, .users-btn:hover {
-            background-color: #868e96;
+        .profile-btn {
+            background: linear-gradient(90deg, #6c757d, #5a6268);
         }
-        .profile-dropdown {
-            position: relative;
+        .profile-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            background: linear-gradient(90deg, #5a6268, #4b5359);
+        }
+        .logout-btn {
+            background: linear-gradient(90deg, #dc3545, #c82333);
+        }
+        .logout-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            background: linear-gradient(90deg, #c82333, #b71c1c);
+        }
+        .users-btn {
+            background: linear-gradient(90deg, #007bff, #0056b3);
+        }
+        .users-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            background: linear-gradient(90deg, #0056b3, #004085);
+        }
+        .islemler-btn {
+            background: linear-gradient(90deg, #17a2b8, #138496);
+        }
+        .islemler-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            background: linear-gradient(90deg, #138496, #117a8b);
         }
         .profile-content {
             display: none;
             position: absolute;
-            right: 0;
-            background-color: #f8f9fa;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            right: 30px;
+            top: 80px;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
             z-index: 1000;
-            padding: 10px;
-            border-radius: 5px;
             width: 300px;
+            animation: slideIn 0.3s ease-in;
         }
         .profile-content.active {
             display: block;
@@ -89,26 +121,42 @@
             flex-wrap: wrap;
         }
         .section {
-            background-color: #f8f9fa;
+            background: #f8f9fa;
             padding: 20px;
-            border-radius: 5px;
+            border-radius: 10px;
             flex: 1;
             min-width: 300px;
         }
+        .book-form-container {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            animation: fadeIn 0.5s ease-in;
+        }
         table {
-            border-collapse: collapse;
             width: 100%;
             margin-bottom: 20px;
-            background-color: #f8f9fa;
+            background: #f8f9fa;
+            border-radius: 10px;
+            overflow: hidden;
         }
         th, td {
-            border: 1px solid #adb5bd;
-            padding: 8px;
+            padding: 15px;
             text-align: left;
+            vertical-align: middle;
             color: #495057;
         }
         th {
-            background-color: #ced4da;
+            background: #007bff;
+            color: #fff;
+            border: none;
+        }
+        tbody tr:nth-child(odd) {
+            background: #fff;
+        }
+        tbody tr:nth-child(even) {
+            background: #f1f3f5;
         }
         .form-group {
             margin-bottom: 15px;
@@ -117,53 +165,49 @@
             display: block;
             margin-bottom: 5px;
             color: #495057;
+            font-weight: bold;
         }
         .form-group input, .form-group select {
             width: 100%;
             padding: 8px;
-            border: 1px solid #adb5bd;
-            border-radius: 4px;
-            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #fff;
         }
         .submit-btn {
+            width: 100%;
             padding: 10px;
-            background-color: #6c757d;
-            color: white;
+            background: linear-gradient(90deg, #28a745, #218838);
+            color: #fff;
             border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
+            border-radius: 8px;
+            transition: transform 0.2s, box-shadow 0.2s;
         }
         .submit-btn:hover {
-            background-color: #495057;
-        }
-        .update-btn {
-            padding: 6px 12px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-        .update-btn:hover {
-            background-color: #0056b3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            background: linear-gradient(90deg, #218838, #1e7e34);
         }
         .delete-btn {
             padding: 6px 12px;
-            background-color: #dc3545;
-            color: white;
+            background: linear-gradient(90deg, #dc3545, #c82333);
+            color: #fff;
             border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
+            border-radius: 8px;
+            transition: transform 0.2s, box-shadow 0.2s;
         }
         .delete-btn:hover {
-            background-color: #b02a37;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            background: linear-gradient(90deg, #c82333, #b71c1c);
         }
         .mesaj {
+            margin: 15px 0;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 10px;
             color: #28a745;
-            margin: 10px 0;
+            text-align: center;
         }
         .pagination {
             display: flex;
@@ -176,161 +220,145 @@
             margin: 0 5px;
         }
         .pagination a {
-            text-decoration: none;
             padding: 8px 12px;
-            border: 1px solid #adb5bd;
-            color: #6c757d;
-            border-radius: 4px;
-            transition: background-color 0.3s ease;
+            background: #007bff;
+            color: #fff;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: background 0.3s;
         }
         .pagination a:hover {
-            background-color: #ced4da;
+            background: #0056b3;
         }
         .pagination .active {
-            background-color: #6c757d;
-            color: white;
+            background: #0056b3;
         }
         .pagination .disabled {
-            color: #adb5bd;
+            background: #adb5bd;
             pointer-events: none;
         }
-        .button-container {
-    display: flex;
-    justify-content: flex-end; /* Butonları sağ tarafa hizalar */
-    gap: 10px; /* Butonlar arasında boşluk bırakır */
-}
-
-.button-container a, .button-container button {
-    padding: 10px 15px; /* Butonun içindeki boşluk */
-    background-color: #868e96; /* Buton rengi */
-    color: white; /* Yazı rengi */
-    border: none; /* Kenarlık yok */
-    border-radius: 5px; /* Kenar yuvarlama */
-    cursor: pointer; /* İmleç değişimi */
-    text-decoration: none; /* Alt çizgi yok */
-    font-size: 14px;
-    transition: background-color 0.3s ease;
-}
-
-.button-container a:hover, .button-container button:hover {
-    background-color: #0056b3; /* Hover rengi */
-}
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes slideIn {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
     </style>
 </head>
 <body>
     <div class="app-container">
         <div class="library-section">
-            <div class="header-title">
-                <h1>Hoşgeldiniz, {{ session['ad_soyad'] }}</h1>
+            <div class="header-container">
+                <h2 class="welcome-text">Hoşgeldiniz, {{ session['ad_soyad'] }}</h2>
                 <div class="button-container">
                     <button class="profile-btn" id="profileBtn">Profil</button>
                     <a href="{{ url_for('personel_cikis') }}" class="logout-btn">Çıkış Yap</a>
                     <a href="{{ url_for('kullanici_yonetim') }}" class="users-btn">Kullanıcılar</a>
-                     <a href="{{ url_for('islemler') }}" class="islemler-btn">İşlemler</a>
+                    <a href="{{ url_for('islemler') }}" class="islemler-btn">İşlemler</a>
                 </div>
             </div>
 
             <div class="overlay" id="overlay"></div>
             <div class="profile-dropdown">
                 <div class="profile-content" id="profileContent">
-                    <div class="section">
-                        <h2>Şifre Değiştir</h2>
-                        <form action="{{ url_for('sifre_degistir') }}" method="POST">
-                            <div class="form-group">
-                                <label for="eski_sifre"">Eski Şifre:</label>
-                                <input type="password" id="eski_sifre" name="eski_sifre" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="yeni_sifre">Yeni Şifre:</label>
-                                <input type="password" id="yeni_sifre" name="yeni_sifre" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="yeni_sifre_tekrar">Yeni Şifre Tekrar:</label>
-                                <input type="password" id="yeni_sifre_tekrar" name="yeni_sifre_tekrar" required>
-                            </div>
-                            <button type="submit" class="submit-btn">Kaydet</button>
-                        </form>
-                    </div>
+                    <h2>Şifre Değiştir</h2>
+                    <form action="{{ url_for('sifre_degistir') }}" method="POST">
+                        <div class="form-group">
+                            <label for="eski_sifre">Eski Şifre:</label>
+                            <input type="password" id="eski_sifre" name="eski_sifre" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="yeni_sifre">Yeni Şifre:</label>
+                            <input type="password" id="yeni_sifre" name="yeni_sifre" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="yeni_sifre_tekrar">Yeni Şifre Tekrar:</label>
+                            <input type="password" id="yeni_sifre_tekrar" name="yeni_sifre_tekrar" required>
+                        </div>
+                        <button type="submit" class="submit-btn">Kaydet</button>
+                    </form>
                 </div>
             </div>
 
             {% with messages = get_flashed_messages() %}
                 {% if messages %}
                     {% for message in messages %}
-                        <p class="mesaj">{{ message }}</p>
+                        <div class="mesaj">{{ message }}</div>
                     {% endfor %}
                 {% endif %}
             {% endwith %}
 
-            <!-- Yan Yana İçerik -->
             <div class="content-container">
-                <!-- Kitap Ekleme/Güncelleme Alanı -->
                 <div class="section">
                     <h2>Kitap Ekle/Güncelle</h2>
-                    <p style="font-size: 12px; color: #495057;">Yeni kitap eklemek için tüm alanları doldurun. Stok güncellemesi için yalnızca Kitap ID ve Stok girin.</p>
-                    <form action="{{ url_for('kitap_ekle_guncelle') }}" method="POST">
-                        <div class="form-group">
-                            <label for="kitap_id">Kitap ID (Güncelleme için):</label>
-                            <input type="number" id="kitap_id" name="kitap_id" placeholder="Boş bırakırsanız yeni kitap eklenir">
-                        </div>
-                        <div class="form-group">
-                            <label for="kitap_adi">Kitap Adı:</label>
-                            <input type="text" id="kitap_adi" name="kitap_adi">
-                        </div>
-                        <div class="form-group">
-                            <label for="yazar">Yazar:</label>
-                            <input type="text" id="yazar" name="yazar">
-                        </div>
-                        <div class="form-group">
-                            <label for="sayfa_sayisi">Sayfa Sayısı:</label>
-                            <input type="number" id="sayfa_sayisi" name="sayfa_sayisi">
-                        </div>
-                        <div class="form-group">
-                            <label for="kategori">Kategori:</label>
-                            <input type="text" id="kategori" name="kategori">
-                        </div>
-                        <div class="form-group">
-                            <label for="stok">Stok:</label>
-                            <input type="number" id="stok" name="stok">
-                        </div>
-                        <button type="submit" class="submit-btn">Kaydet</button>
-                    </form>
+                    <div class="book-form-container">
+                        <p style="font-size: 12px; color: #495057;">Yeni kitap eklemek için tüm alanları doldurun. Stok güncellemesi için yalnızca Kitap ID ve Stok girin.</p>
+                        <form action="{{ url_for('kitap_ekle_guncelle') }}" method="POST">
+                            <div class="form-group">
+                                <label for="kitap_id">Kitap ID (Güncelleme için):</label>
+                                <input type="number" id="kitap_id" name="kitap_id" placeholder="Boş bırakırsanız yeni kitap eklenir">
+                            </div>
+                            <div class="form-group">
+                                <label for="kitap_adi">Kitap Adı:</label>
+                                <input type="text" id="kitap_adi" name="kitap_adi">
+                            </div>
+                            <div class="form-group">
+                                <label for="yazar">Yazar:</label>
+                                <input type="text" id="yazar" name="yazar">
+                            </div>
+                            <div class="form-group">
+                                <label for="sayfa_sayisi">Sayfa Sayısı:</label>
+                                <input type="number" id="sayfa_sayisi" name="sayfa_sayisi">
+                            </div>
+                            <div class="form-group">
+                                <label for="kategori">Kategori:</label>
+                                <input type="text" id="kategori" name="kategori">
+                            </div>
+                            <div class="form-group">
+                                <label for="stok">Stok:</label>
+                                <input type="number" id="stok" name="stok">
+                            </div>
+                            <button type="submit" class="submit-btn">Kaydet</button>
+                        </form>
+                    </div>
                 </div>
 
-                <!-- Mevcut Kitaplar Tablosu -->
                 <div class="section">
-                    <h2>Mevcut Kitaplar</h2>
-                    <table>
-                        <tr>
-                            <th style="width: 1%;">ID</th>
-                            <th>Kitap Adı</th>
-                            <th>Yazar</th>
-                            <th>Sayfa Sayısı</th>
-                            <th>Kategori</th>
-                            <th>Stok</th>
-                            <th>İşlemler</th>
-                        </tr>
-                        {% for kitap in kitaplar %}
-                        <tr>
-                            <td>{{ kitap['id'] }}</td>
-                            <td>{{ kitap['kitap_adi'] }}</td>
-                            <td>{{ kitap['yazar'] }}</td>
-                            <td>{{ kitap['sayfa_sayisi'] }}</td>
-                            <td>{{ kitap['kategori'] }}</td>
-                            <td>{{ kitap['stok'] }}</td>
-                            <td>
-                                <form action="{{ url_for('kitap_guncelle_form') }}" method="POST" style="display:inline;">
-                                    <input type="hidden" name="kitap_id" value="{{ kitap['id'] }}">
-                                    <button type="submit" class="update-btn">Güncelle</button>
-                                </form>
-                                <form action="{{ url_for('kitap_sil') }}" method="POST" style="display:inline;" onsubmit="return confirm('Bu kitabı silmek istediğinizden emin misiniz?');">
-                                    <input type="hidden" name="kitap_id" value="{{ kitap['id'] }}">
-                                    <button type="submit" class="delete-btn">Sil</button>
-                                </form>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </table>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th style="width: 5%;">ID</th>
+                                    <th>Kitap Adı</th>
+                                    <th>Yazar</th>
+                                    <th>Sayfa Sayısı</th>
+                                    <th>Kategori</th>
+                                    <th>Stok</th>
+                                    <th>İşlemler</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for kitap in kitaplar %}
+                                <tr>
+                                    <td>{{ kitap['id'] }}</td>
+                                    <td>{{ kitap['kitap_adi'] }}</td>
+                                    <td>{{ kitap['yazar'] }}</td>
+                                    <td>{{ kitap['sayfa_sayisi'] }}</td>
+                                    <td>{{ kitap['kategori'] }}</td>
+                                    <td>{{ kitap['stok'] }}</td>
+                                    <td>
+                                        <form action="{{ url_for('kitap_sil') }}" method="POST" style="display:inline;" onsubmit="return confirm('Bu kitabı silmek istediğinizden emin misiniz?');">
+                                            <input type="hidden" name="kitap_id" value="{{ kitap['id'] }}">
+                                            <button type="submit" class="delete-btn">Sil</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
 
                     {% if toplam_sayfa > 1 %}
                     <ul class="pagination">
@@ -346,6 +374,7 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const profileBtn = document.getElementById('profileBtn');
@@ -371,4 +400,4 @@
         });
     </script>
 </body>
-</html> 
+</html>

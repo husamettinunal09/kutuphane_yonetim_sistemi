@@ -923,7 +923,7 @@ def fetch_borrowed_books():
     conn = veritabani_baglantisi()
     cur = conn.cursor()
     cur.execute('''
-        SELECT k.kitap_adi, k.yazar, o.odunc_zamani, o.iade_zamani
+        SELECT k.kitap_adi, k.yazar, o.odunc_zamani, o.iade_zamani, o.kitap_id
         FROM odunc o
         JOIN kitaplar k ON o.kitap_id = k.id
         WHERE o.tc = ? AND o.durum = 'alindi'

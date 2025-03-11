@@ -226,13 +226,13 @@
                         const oduncTarihi = formatDate(book.odunc_zamani);
                         const iadeTarihi = book.iade_zamani ? formatDate(book.iade_zamani) : 'Belirtilmedi';
                         return `
-                            <tr>
+                            <tr data-kitap-id="${book.kitap_id}">
                                 <td>${book.kitap_adi}</td>
                                 <td>${book.yazar}</td>
                                 <td>${oduncTarihi}</td>
                                 <td>${iadeTarihi}</td>
                                 <td>
-                                    <button class="btn btn-return" onclick="returnBook('${tc}', ${book.kitap_id})">İade</button>
+                                    <button class="btn btn-return" onclick="returnBook('${tc}', '${book.kitap_id}')">İade</button>
                                 </td>
                             </tr>
                         `;
@@ -248,22 +248,25 @@
             if (!confirm('Bu kitabı iade etmek istediğinize emin misiniz?')) return;
 
             try {
-                const response = await fetch('/return_book_by_tc', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ tc: tc, kitap_id: kitapId })
-                });
-                const result = await response.json();
+                const formData = new FormData();
+                formData.append('tc', tc);
+                formData.append('kitap_id', kitapId);
 
-                if (result.success) {
+                const response = await fetch('/kitap_iade_et', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const text = await response.text(); // JSON yerine HTML dönebileceği için text alıyoruz
+                if (response.ok) {
                     alert('Kitap başarıyla iade edildi!');
                     fetchBorrowedBooks(tc); // Tabloyu güncelle
                 } else {
-                    alert(result.error || 'İade işlemi başarısız!');
+                    alert('İade işlemi başarısız! Hata: ' + text);
                 }
             } catch (error) {
                 console.error('Hata:', error);
-                alert('Bir hata oluştu!');
+                alert('İade sırasında bir hata oluştu!');
             }
         }
 

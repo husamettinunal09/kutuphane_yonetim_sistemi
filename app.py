@@ -195,7 +195,6 @@ def kutuphane_personel():
 
 @app.route('/kutuphane_kullanici', methods=['GET'])
 def kutuphane_kullanici():
-    """Kullanıcı kütüphane sayfası ve kitap işlemleri."""
     if 'tc' not in session or session.get('rol') != 'kullanici':
         flash('Bu sayfaya erişim yetkiniz yok!')
         return redirect(url_for('kullanici_giris')) 
@@ -244,8 +243,9 @@ def kutuphane_kullanici():
     toplam_sayfa = (toplam_kitap + sayfa_basi - 1) // sayfa_basi
     kitaplar = tum_kitaplar[(sayfa - 1) * sayfa_basi : sayfa * sayfa_basi]
 
+    # Ödünç alınan kitapları çekerken iade_zamani bilgisini de çekiyoruz
     cur.execute(''' 
-        SELECT k.kitap_adi, k.yazar, o.odunc_zamani 
+        SELECT k.kitap_adi, k.yazar, o.odunc_zamani, o.iade_zamani 
         FROM odunc o 
         JOIN kitaplar k ON o.kitap_id = k.id 
         WHERE o.tc = ? AND o.durum = 'alindi'
